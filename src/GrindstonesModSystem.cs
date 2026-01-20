@@ -60,22 +60,6 @@ namespace Grindstones
 			base.StartServerSide(api);
 
 			TryLoadServerConfig(api);
-
-			IChatCommand command = api.ChatCommands.Create("ReadGrindstone")
-				.WithDescription("Prints the inventory of selected grindstone")
-				.RequiresPrivilege(Privilege.gamemode)
-				.RequiresPlayer()
-				.HandleWith((args) => {
-					IPlayer byPlayer = args.Caller.Player;
-					BlockSelection blockSel = byPlayer.CurrentBlockSelection;
-					IWorldAccessor world = args.Caller.Entity.World;
-
-					BlockEntityGrindstone beg = world.BlockAccessor.GetBlockEntity(blockSel.Position) as BlockEntityGrindstone;
-					if (beg is null) return TextCommandResult.Error("Player needs to have a Grindstone selected");
-					string wheel = beg.inventory[0]?.Itemstack?.GetName() ?? "Nothing";
-
-					return TextCommandResult.Success(wheel + " is in this Grindstone");
-				});
 		}
 
 		public override void Dispose ()
