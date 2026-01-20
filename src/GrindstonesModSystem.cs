@@ -7,6 +7,8 @@ using Vintagestory.API.Config;
 using Vintagestory.API.Server;
 using Vintagestory.Server;
 
+#nullable disable
+
 namespace Grindstones
 {
     public class GrindstonesModSystem : ModSystem
@@ -38,7 +40,7 @@ namespace Grindstones
 		public override void Start(ICoreAPI api)
         {
 			Logger.Notification("Start: " + api.Side);
-			Harmony harmony = new Harmony(Mod.Info.ModID);
+			harmony = new Harmony(Mod.Info.ModID);
 			harmony.PatchAll();
 
 			api.RegisterBlockClass(Mod.Info.ModID + ".grindstone", typeof(BlockGrindstone));
