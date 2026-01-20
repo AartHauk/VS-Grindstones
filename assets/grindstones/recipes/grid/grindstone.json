@@ -1,0 +1,17 @@
+{
+	"ingredientPattern": "H_P,PNP,P_P",
+	"ingredients": {
+		"N": { "type": "item", "code": "game:metalnailsandstrips-*" },
+		"P": {
+			"type": "item",
+			"code": "game:plank-*",
+			"name": "wood",
+			"quantity": 2
+		},
+		"H": { "type": "item", "code": "game:hammer-*", "isTool": true, "toolDurabilityCost": 10 },
+	},
+	"width": 3,
+	"height": 3,
+	"shapeless": false,
+	"output": { "type": "block", "code": "grindstone-{wood}-east", "quantity": 1 }
+}

@@ -1,0 +1,19 @@
+{
+	"ingredientPattern": "HSC,SRS,_S_",
+	"ingredients": {
+		"R": { "type": "item", "code": "game:rod-*", "name": "rod", "quantity": 1 },
+		"S": {
+			"type": "block",
+			"code": "game:rock-*",
+			"allowedVariants": [ "andesite", "granite", "basalt", "peridotite" ],
+			"name": "stone",
+			"quantity": 1
+		},
+		"H": { "type": "item", "code": "game:hammer-*", "isTool": true, "toolDurabilityCost": 10 },
+		"C": { "type": "item", "code": "game:chisel-*", "isTool":  true, "toolDurabilityCost":  5 }
+	},
+	"width": 3,
+	"height": 3,
+	"shapeless": false,
+	"output": { "type": "item", "code": "grindingwheel-{stone}-{rod}", "quantity": 1 }
+}

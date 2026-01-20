@@ -1,0 +1,28 @@
+{
+	"game:tabname-grindstones": "Grindstones",
+
+	// Grindstone Variants
+	"block-grindstone-aged-*": "Grindstone (Aged)",
+	"block-grindstone-birch-*": "Grindstone (Birch)",
+	"block-grindstone-oak-*": "Grindstone (Oak)",
+	"block-grindstone-maple-*": "Grindstone (Maple)",
+	"block-grindstone-pine-*": "Grindstone (Pine)",
+	"block-grindstone-acacia-*": "Grindstone (Acacia)",
+	"block-grindstone-kapok-*": "Grindstone (Kapok)",
+	"block-grindstone-redwood-*": "Grindstone (Redwood)",
+	"block-grindstone-baldcypress-*": "Grindstone (Bald cypress)",
+	"block-grindstone-larch-*": "Grindstone (Larch)",
+	"block-grindstone-ebony-*": "Grindstone (Ebony)",
+	"block-grindstone-walnut-*": "Grindstone (Walnut)",
+	"block-grindstone-purpleheart-*": "Grindstone (Purpleheart)",
+	// "block-grindstone-*": "Grindstone",
+
+	// Grinding Wheel Variants
+	"item-grindingwheel-andesite-*": "Andesite Grinding Wheel",
+	"item-grindingwheel-granite-*": "Granite Grinding Wheel",
+	"item-grindingwheel-basalt-*": "Basalt Grinding Wheel",
+	"item-grindingwheel-peridotite-*": "Peridotite Grinding Wheel",
+
+	"none": "none",
+	"Wheel: {0}": "Wheel: {0}"
+}

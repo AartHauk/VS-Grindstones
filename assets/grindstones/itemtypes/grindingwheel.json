@@ -1,0 +1,93 @@
+{
+	"code": "grindingwheel",
+
+	"variantgroups": [
+		{
+			"code": "stone",
+			"states": [ "andesite", "granite", "basalt", "peridotite" ]
+		},
+		{
+			"code": "metal",
+			"states": [ "copper", "tinbronze", "bismuthbronze", "blackbronze", "gold", "silver", "iron", "meteoriciron", "steel", "cupronickel", "electrum" ]
+		}
+	],
+
+	"creativeinventoryByType": {
+		"*": {
+			"general": [ "*" ],
+			"grindstones": [ "*" ]
+		}
+	},
+
+	"shape": {
+		"base": "item/grindingwheel"
+	},
+
+	"textures": {
+		"stone": { "base": "game:block/stone/rock/{stone}*" },
+		"metal": { "base": "game:block/metal/ingot/{metal}*" }
+	},
+
+	"attributes": {
+		"shelvable": false,
+		"handbook": {
+			"groupBy": [ "grindingwheel-{stone}-*" ]
+		}
+	},
+	"maxstacksize": 1,
+
+	"guiTransform": {
+		"translation": {
+			"x": -1,
+			"y": 0,
+			"z": 0
+		},
+		"rotation": {
+			"x": 64,
+			"y": -37,
+			"z": 20
+		},
+		"origin": {
+			"x": 0.5,
+			"y": 0.25,
+			"z": 0.5
+		},
+		"scale": 2.98
+	},
+	"fpHandTransform": {
+		"translation": {
+			"x": -0.75,
+			"y": -0.25,
+			"z": -0.5
+		},
+		"rotation": {
+			"x": 125,
+			"y": 0,
+			"z": 0
+		},
+		"origin": {
+			"x": 0.5,
+			"y": 0.25,
+			"z": 0.5
+		},
+		"scale": 1
+	},
+	"tpHandTransform": {
+		"translation": {
+			"x": -0.75,
+			"y": -0.25,
+			"z": -0.5
+		},
+		"rotation": {
+			"x": 125,
+			"y": 0,
+			"z": 0
+		},
+		"origin": {
+			"x": 0.5,
+			"y": 0.25,
+			"z": 0.5
+		},
+		"scale": 1
+	}
+}

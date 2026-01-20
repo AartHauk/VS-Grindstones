@@ -1,0 +1,87 @@
+{
+	"code": "grindstone",
+	"class": "grindstones.grindstone",
+	"entityClass": "grindstones.begrindstone",
+
+	"entityBehaviors": [
+		{ "name": "Animatable" }
+	],
+
+	"behaviors": [
+		{ "name": "HorizontalOrientable" }
+	],
+	"variantgroups": [
+		{
+			"code": "wood",
+			"states": [ "aged" ],
+			"loadFromProperties": "block/wood"
+		},
+		{
+			"code": "side",
+			"loadFromProperties": "abstract/horizontalorientation"
+		}
+	],
+
+	"creativeinventoryByType": {
+		"*-east": {
+			"general": [ "*" ],
+			"grindstones": [ "*" ]
+		}
+	},
+
+	"drawtype": "json",
+	"shape": {
+		"base": "block/treadlegrindstone",
+		"rotateYByType": {
+			"*-north": 0,
+			"*-west": 90,
+			"*-south": 180,
+			"*-east": 270
+		}
+	},
+	"collisionSelectionBoxesByType": {
+		"*": [
+			{
+				"x1": 0.3125,
+				"y1": 0,
+				"z1": 0,
+				"x2": 0.6875,
+				"y2": 1,
+				"z2": 1,
+				"rotateYByType": {
+					"*-north": 0,
+					"*-west": 90,
+					"*-south": 180,
+					"*-east": 270
+				}
+			}
+		]
+	},
+	"textures": {
+		"wood": { "base": "game:block/wood/planks/{wood}*" }
+	},
+
+
+	"sidesolid": {
+		"all": false
+	},
+	"sideopaque": {
+		"all": false
+	},
+
+	"blockmaterial": "Wood",
+	"resistance": 3.5,
+	"sounds": {
+		"break": "game:block/planks",
+		"place": "game:block/planks",
+		"hit": "game:block/planks"
+	},
+	"rainpermeable": true,
+	"maxstacksize": 1,
+	"drops": [
+		{
+			"type": "block",
+			"code": "grindstone-{wood}-east"
+		}
+	]
+}

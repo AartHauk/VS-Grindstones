@@ -1,0 +1,16 @@
+{
+  "$schema": "https://moddbcdn.vintagestory.at/schema/modinfo.latest.json",
+  "type": "Code",
+  "modid": "grindstones",
+  "name": "Grindstones",
+  "authors": [
+    "Aart Hauk"
+  ],
+  "description": "Adds the ability to repair your tools using a grindstone for the cost of maximum durability.",
+  "version": "1.0.0",
+  "requieredOnClient": true,
+  "requieredOnServer": true,
+  "dependencies": {
+    "game": "1.21.0"
+  }
+}
