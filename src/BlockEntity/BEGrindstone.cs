@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Net.Http.Headers;
-using System.Runtime.CompilerServices;
 using System.Text;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
@@ -57,13 +55,13 @@ namespace Grindstones
 
 				if (sharpeningSound is null)
 				{
-					sharpeningSound = (api.World as IClientWorldAccessor).LoadSound(new SoundParams()
+					sharpeningSound = (api as ICoreClientAPI).World.LoadSound(new SoundParams()
 					{
 						Location = new AssetLocation("grindstones:sounds/sharpening.ogg"),
-						ShouldLoop = true,
 						Position = Pos.ToVec3f().Add(0.5f, 0.5f, 0.5f),
+						ShouldLoop = true,
 						DisposeOnFinish = false,
-						Volume = 1f
+						Volume = 1f,
 					});
 				}
 			}
@@ -237,14 +235,16 @@ namespace Grindstones
 			startLoadingMs = Api.World.ElapsedMilliseconds;
 
 			updateMeshesAndRenderer(Api as ICoreClientAPI);
-
+			
 			if (sharpeningSound?.IsFadingOut == true || sharpeningSound?.IsPlaying == false)
 			{
-				sharpeningSound.SetPitchOffset(randomStd(dev: 0.1f));
+				sharpeningSound?.SetPitchOffset(randomStd(dev: 0.1f));
 				sharpeningSound?.Start();
 				sharpeningSound?.FadeIn(0.25f, null);
 			}
 
+			// Keep for if I ever get around to adding animation on the block itself
+			/*
 			animUtil.StartAnimation(new AnimationMetaData()
 			{
 				Animation = "grindstones.grindingwheelworking",
@@ -253,6 +253,7 @@ namespace Grindstones
 				EaseOutSpeed = 1f,
 				EaseInSpeed = 1f
 			});
+			*/
 		}
 
 		void StopWheel ()
@@ -265,7 +266,8 @@ namespace Grindstones
 
 			sharpeningSound?.FadeOutAndStop(0.25f);
 
-			animUtil.StopAnimation("grindstones.grindingwheelworking");
+			// Keep for if I ever get around to adding animation on the block itself
+			//animUtil.StopAnimation("grindstones.grindingwheelworking");
 		}
 
 		#endregion
