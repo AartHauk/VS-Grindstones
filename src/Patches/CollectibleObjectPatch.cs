@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 using Vintagestory.API.Common;
 
-namespace Grindstones.src.Patches
+namespace Grindstones
 {
 	[HarmonyPatch(typeof(CollectibleObject))]
 	public class CollectibleObjectPatch
@@ -15,7 +15,7 @@ namespace Grindstones.src.Patches
 		[HarmonyPostfix]
 		[HarmonyPatch("GetMaxDurability")]
 		public static void Postfix (ref int __result, ItemStack itemstack) {
-			float maxDuarbility = (int) (itemstack?.Attributes.TryGetFloat("maxDurability") ?? __result);
+			float maxDuarbility = (int) (itemstack?.Attributes.TryGetInt("maxDurability") ?? __result);
 			__result = (int) maxDuarbility;
 		}
 	}
