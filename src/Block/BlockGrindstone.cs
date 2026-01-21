@@ -72,7 +72,7 @@ namespace Grindstones
 		{
 			string wood = this.Variant["wood"];
 			ItemStack stack = new ItemStack(api.World.GetBlock(new AssetLocation("grindstones", "grindstone-" + wood + "-east")));
-			return new ItemStack[] { stack };
+			return [ stack ];
 		}
 	}
 }

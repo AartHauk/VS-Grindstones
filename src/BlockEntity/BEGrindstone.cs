@@ -1,5 +1,4 @@
-﻿using Grindstones.src;
-using System;
+﻿using System;
 using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -18,7 +17,7 @@ namespace Grindstones
 	{
 		internal InventoryGrindstone inventory;
 		public override InventoryBase Inventory => inventory;
-		public override string InventoryClassName => GrindstonesModSystem.ModID + ".begrindstone";
+		public override string InventoryClassName => ModGrindstones.ModID + ".begrindstone";
 
 		MeshData wheelMesh;
 
@@ -53,7 +52,7 @@ namespace Grindstones
 
 			if (api.Side == EnumAppSide.Client)
 			{
-				(api as ICoreClientAPI).Event.RegisterRenderer(renderer = new GrindstoneRenderer(Pos, api as  ICoreClientAPI, getRotation()), EnumRenderStage.Opaque, GrindstonesModSystem.ModID + ".grindstonerenderer");
+				(api as ICoreClientAPI).Event.RegisterRenderer(renderer = new GrindstoneRenderer(Pos, api as  ICoreClientAPI, getRotation()), EnumRenderStage.Opaque, ModGrindstones.ModID + ".grindstonerenderer");
 				updateMeshesAndRenderer(api as ICoreClientAPI);
 
 				if (sharpeningSound is null)
@@ -166,15 +165,36 @@ namespace Grindstones
 				return true;
 			}
 
-			float maxDurabiltyDrain = 1.0f / GrindstonesModSystem.Config.DurabilityPointsRepairedPerPointLost;
+			int maxDurabilityLoss = ModGrindstones.ConfigServer.MaxDurabilityLoss;
+			int durabilityGain = ModGrindstones.ConfigServer.DurabilityGain;
 
 			int starterMax = heldItemStack.Collectible.GetMaxDurability(heldItemStack);
 
-			int durability = heldItemStack.Collectible.GetRemainingDurability(heldItemStack);
-			float maxDurability = heldItemStack.Attributes.GetFloat("maxDurability", starterMax);
+			int currentDurability = heldItemStack.Collectible.GetRemainingDurability(heldItemStack);
+			int currentMaxDurability = heldItemStack.Attributes.GetInt("maxDurability", starterMax);
+
+			int nextDurability = currentDurability + durabilityGain;
+			int nextMaxDurability = currentMaxDurability - maxDurabilityLoss;
 
 			// Do not go above max durability
-			if (durability >= (int) (maxDurability - maxDurabiltyDrain))
+			if (nextDurability > nextMaxDurability)
+			{
+				nextDurability = nextMaxDurability;
+
+				// Stop reparing, we hit are preserving durability
+				if (ModGrindstones.ConfigServer.SafeSharpening)
+				{
+					if (IsSharpening)
+					{
+						StopWheel();
+						MarkDirty(true);
+					}
+					return true;
+				}
+			}
+
+			// Stop repairing, item is already at max durability
+			if (currentDurability >= currentMaxDurability)
 			{
 				if (IsSharpening)
 				{
@@ -184,19 +204,15 @@ namespace Grindstones
 				return true;
 			}
 
+			// Start animation becase we are doing work
 			if (!IsSharpening)
 			{
 				StartWheel();
 				MarkDirty(true);
 			}
 
-			//durability += 1;
-			maxDurability -= maxDurabiltyDrain;
-
-			heldItemStack.Item.DamageItem(world, byPlayer.Entity, activeSlot, -1);
-
-			//heldItemStack.Item.SetDurability(heldItemStack, durability);
-			heldItemStack.Attributes.SetFloat("maxDurability", maxDurability);
+			heldItemStack.Item.DamageItem(world, byPlayer.Entity, activeSlot, currentDurability - nextDurability);
+			heldItemStack.Attributes.SetInt("maxDurability", nextMaxDurability);
 
 			return true;
 		}
@@ -363,7 +379,7 @@ namespace Grindstones
 		{
 			if (animUtil?.animator == null)
 			{
-				animUtil?.InitializeAnimator(GrindstonesModSystem.ModID + ".grindstone", null, null, new Vec3f(0, getRotation(), 0));
+				animUtil?.InitializeAnimator(ModGrindstones.ModID + ".grindstone", null, null, new Vec3f(0, getRotation(), 0));
 			}
 			return base.OnTesselation(mesher, tessThreadTesselator);
 		}
@@ -377,10 +393,10 @@ namespace Grindstones
 			if (item.Tool is null) return false;
 
 			// Check if allowed tool type
-			if (GrindstonesModSystem.Config.NotRepairableToolTypes.Contains(item.Tool?.ToString() ?? "")) return false;
+			if (!ModGrindstones.ConfigServer.IsRepairableTool(item.Tool?.ToString() ?? "")) return false;
 
 			// Check if allowed metal type
-			if (!GrindstonesModSystem.Config.AllowedRepairableMaterials.Contains(item.Variant["material"] ?? item.Variant["metal"])) return false;
+			if (!ModGrindstones.ConfigServer.IsRepairableMaterial(item.Variant["material"] ?? item.Variant["metal"])) return false;
 
 			return true;
 		}

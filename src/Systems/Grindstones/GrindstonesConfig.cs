@@ -29,7 +29,7 @@ namespace Grindstones
 		}
 
 		[JsonIgnore]
-		public float DurabilityGain
+		public int DurabilityGain
 		{
 			get
 			{
