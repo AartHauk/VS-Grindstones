@@ -62,6 +62,8 @@ namespace Grindstones
 			base.StartServerSide(api);
 
 			TryLoadServerConfig(api);
+
+			// CreateServerCommands(api);
 		}
 
 		public override void Dispose ()
@@ -112,6 +114,7 @@ namespace Grindstones
 			api.World.Config.SetString(ModID + ".Ratio", serverConfig.RatioMaxDurabilityLossToDurabilityGain);
 			api.World.Config.SetString(ModID + ".ToolBlackList", string.Join(",", serverConfig.NotRepairableToolTypes));
 			api.World.Config.SetString(ModID + ".MaterialWhitelist", string.Join(",", serverConfig.AllowedRepairableMaterials));
+			api.World.Config.SetBool(ModID + ".Safe", serverConfig.SafeSharpening);
 		}
 
 		private void GetServerSettings(ICoreAPI api)
@@ -120,7 +123,25 @@ namespace Grindstones
 			ConfigServer.RatioMaxDurabilityLossToDurabilityGain = api.World.Config.GetString(ModID + ".Ratio", ConfigServer.RatioMaxDurabilityLossToDurabilityGain);
 			ConfigServer.NotRepairableToolTypes = [..api.World.Config.GetString(ModID + ".ToolBlackList", string.Join(",", ConfigServer.NotRepairableToolTypes)).Split(",")];
 			ConfigServer.AllowedRepairableMaterials = [..api.World.Config.GetString(ModID + ".MaterialWhitelist", string.Join(",", ConfigServer.AllowedRepairableMaterials)).Split(",")];
+			ConfigServer.SafeSharpening = api.World.Config.GetBool(ModID + ".Safe", ConfigServer.SafeSharpening);
 		}
 
+		// TODO Add the ability to change settings on the fly
+		private void CreateServerCommands(ICoreAPI api)
+		{
+			api.ChatCommands.Create("GConfig")
+				.WithDescription("Change Grindstones mod config settings on the fly")
+				.RequiresPrivilege(Privilege.controlserver)
+				.BeginSubCommand("ratio")
+				.WithDescription("Change the ratio of MaxLoss to Gain.")
+				.WithArgs(new StringArgParser("ratio", true))
+				.HandleWith((args) =>
+				{
+					ConfigServer.RatioMaxDurabilityLossToDurabilityGain = args.LastArg.ToString();
+					return TextCommandResult.Success();
+				})
+				.EndSubCommand()
+				.Validate();
+		}
 	}
 }

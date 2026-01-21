@@ -173,6 +173,26 @@ namespace Grindstones
 			int currentDurability = heldItemStack.Collectible.GetRemainingDurability(heldItemStack);
 			int currentMaxDurability = heldItemStack.Attributes.GetInt("maxDurability", starterMax);
 
+			int nextDurability = currentDurability + durabilityGain;
+			int nextMaxDurability = currentMaxDurability - maxDurabilityLoss;
+
+			// Do not go above max durability
+			if (nextDurability > nextMaxDurability)
+			{
+				nextDurability = nextMaxDurability;
+
+				// Stop reparing, we hit are preserving durability
+				if (ModGrindstones.ConfigServer.SafeSharpening)
+				{
+					if (IsSharpening)
+					{
+						StopWheel();
+						MarkDirty(true);
+					}
+					return true;
+				}
+			}
+
 			// Stop repairing, item is already at max durability
 			if (currentDurability >= currentMaxDurability)
 			{
@@ -189,15 +209,6 @@ namespace Grindstones
 			{
 				StartWheel();
 				MarkDirty(true);
-			}
-
-			int nextDurability = currentDurability + durabilityGain;
-			int nextMaxDurability = currentMaxDurability - maxDurabilityLoss;
-
-			// Do not go above max durability
-			if (nextDurability > nextMaxDurability)
-			{
-				nextDurability = nextMaxDurability;
 			}
 
 			heldItemStack.Item.DamageItem(world, byPlayer.Entity, activeSlot, currentDurability - nextDurability);
