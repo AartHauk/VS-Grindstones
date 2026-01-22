@@ -126,7 +126,7 @@ namespace Grindstones
 		{
 
 			// Make sure there is a grinding wheel before trying anything
-			if (inventory[0].Empty)
+			if (!HasWheel)
 			{
 				if (IsSharpening)
 				{
@@ -166,10 +166,8 @@ namespace Grindstones
 			int maxDurabilityLoss = ModGrindstones.ConfigServer.MaxDurabilityLoss;
 			int durabilityGain = ModGrindstones.ConfigServer.DurabilityGain;
 
-			int starterMax = heldItemStack.Collectible.GetMaxDurability(heldItemStack);
-
 			int currentDurability = heldItemStack.Collectible.GetRemainingDurability(heldItemStack);
-			int currentMaxDurability = heldItemStack.Attributes.GetInt("maxDurability", starterMax);
+			int currentMaxDurability = heldItemStack.Collectible.GetMaxDurability(heldItemStack);
 
 			int nextDurability = currentDurability + durabilityGain;
 			int nextMaxDurability = currentMaxDurability - maxDurabilityLoss;

@@ -13,10 +13,12 @@ namespace Grindstones
 	public class CollectibleObjectPatch
 	{
 		[HarmonyPostfix]
+		[HarmonyAfter(["XSkillsPatch"])]
 		[HarmonyPatch("GetMaxDurability")]
 		public static void Postfix (ref int __result, ItemStack itemstack) {
-			float maxDuarbility = (int) (itemstack?.Attributes.TryGetInt("maxDurability") ?? __result);
-			__result = (int) maxDuarbility;
+			int maxDuarbility = itemstack?.Attributes.TryGetInt("maxDurability") ?? __result;
+
+			__result = maxDuarbility;
 		}
 	}
 }
