@@ -6,7 +6,7 @@
   "side": "Universal",
   "requiredOnClient": true,
   "requiredOnServer": true,
-  "version": "1.1.0",
+  "version": "1.1.2",
   "description": "Adds the ability to repair your tools using a grindstone for the cost of maximum durability.",
   "authors": [
     "Aart Hauk"
