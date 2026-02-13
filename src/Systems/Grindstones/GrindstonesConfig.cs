@@ -49,10 +49,11 @@ namespace Grindstones
 
 		public bool IsRepairableTool (string tool)
 		{
-			return !NotRepairableToolTypes.Contains(tool.ToLower());
+			return !NotRepairableToolTypes.Contains(tool?.ToLower() ?? "unspecified");
 		}
 
 		public HashSet<string> AllowedRepairableMaterials = new HashSet<string>(){
+			"unspecified",
 			"copper",
 			"tinbronze",
 			"bismuthbronze",
@@ -68,7 +69,7 @@ namespace Grindstones
 
 		public bool IsRepairableMaterial (string material)
 		{
-			return AllowedRepairableMaterials.Contains(material.ToLower());
+			return AllowedRepairableMaterials.Contains(material?.ToLower() ?? "unspecified");
 		}
 
 		[Obsolete("Version 1 config setting, use MaxDuabilityLoss and DurabilityGain instead.")]
