@@ -1,7 +1,13 @@
 {
 	"ingredientPattern": "HSC,SRS,_S_",
 	"ingredients": {
-		"R": { "type": "item", "code": "game:rod-*", "name": "rod", "quantity": 1 },
+		"R": {
+			"type": "item",
+			"code": "game:rod-*",
+			"allowedVariants": [ "copper", "tinbronze", "bismuthbronze", "blackbronze", "gold", "silver", "iron", "meteoriciron", "steel", "cupronickel", "electrum" ],
+			"name": "rod",
+			"quantity": 1
+		},
 		"S": {
 			"type": "block",
 			"code": "game:rock-*",
