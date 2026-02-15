@@ -47,6 +47,8 @@ namespace Grindstones
 
 			api.RegisterBlockClass(ModID + ".grindstone", typeof(BlockGrindstone));
 			api.RegisterBlockEntityClass(ModID + ".begrindstone", typeof(BlockEntityGrindstone));
+
+			api.RegisterItemClass(ModID + ".grindingwheel", typeof(ItemGrindingwheel));
 		}
 
 		public override void StartClientSide (ICoreClientAPI api)
