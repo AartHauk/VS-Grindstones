@@ -12,6 +12,8 @@ using Vintagestory.API.Server;
 
 namespace Grindstones
 {
+	// TODO: Add auto updater for converting grinding wheels from varient style to attribute stlye
+
 	public class ModGrindstones : ModSystem
 	{
 		public static ModGrindstones Instance { get; private set; }
