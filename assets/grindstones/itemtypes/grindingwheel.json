@@ -1,38 +1,95 @@
 {
 	"code": "grindingwheel",
+	"class": "grindstones.grindingwheel",
 
-	"variantgroups": [
-		{
-			"code": "stone",
-			"states": [ "andesite", "granite", "basalt", "peridotite" ]
-		},
-		{
-			"code": "metal",
-			"states": [ "copper", "tinbronze", "bismuthbronze", "blackbronze", "gold", "silver", "iron", "meteoriciron", "steel", "cupronickel", "electrum" ]
-		}
-	],
+	//"variantgroups": [
+	//	{
+	//		"code": "stone",
+	//		"states": [ "andesite", "granite", "basalt", "peridotite" ]
+	//	},
+	//	{
+	//		"code": "metal",
+	//		"states": [ "copper", "tinbronze", "bismuthbronze", "blackbronze", "gold", "silver", "iron", "meteoriciron", "steel", "cupronickel", "electrum" ]
+	//	}
+	//],
 
-	"creativeinventoryByType": {
-		"*": {
-			"general": [ "*" ],
-			"grindstones": [ "*" ]
-		}
-	},
+	//"creativeinventoryByType": {
+	//	"*": {
+	//		"general": [ "*" ],
+	//		"grindstones": [ "*" ]
+	//	}
+	//},
+
+	"creativeinventory": {},
+
+	"creativeinventoryStacks": [{
+		"tabs": [ "general", "grindstones" ],
+		"stacks": [
+			{ "type": "item", "code": "grindingwheel", "attributes": {"stoneType": "andesite", "rodMetal": "copper"}},
+			{ "type": "item", "code": "grindingwheel", "attributes": {"stoneType": "andesite", "rodMetal": "tinbronze"}},
+			{ "type": "item", "code": "grindingwheel", "attributes": {"stoneType": "andesite", "rodMetal": "bismuthbronze"}},
+			{ "type": "item", "code": "grindingwheel", "attributes": {"stoneType": "andesite", "rodMetal": "blackbronze"}},
+			{ "type": "item", "code": "grindingwheel", "attributes": {"stoneType": "andesite", "rodMetal": "gold"}},
+			{ "type": "item", "code": "grindingwheel", "attributes": {"stoneType": "andesite", "rodMetal": "silver"}},
+			{ "type": "item", "code": "grindingwheel", "attributes": {"stoneType": "andesite", "rodMetal": "iron"}},
+			{ "type": "item", "code": "grindingwheel", "attributes": {"stoneType": "andesite", "rodMetal": "meteoriciron"}},
+			{ "type": "item", "code": "grindingwheel", "attributes": {"stoneType": "andesite", "rodMetal": "steel"}},
+			{ "type": "item", "code": "grindingwheel", "attributes": {"stoneType": "andesite", "rodMetal": "cupronickel"}},
+			{ "type": "item", "code": "grindingwheel", "attributes": {"stoneType": "andesite", "rodMetal": "electrum"}},
+
+			{ "type": "item", "code": "grindingwheel", "attributes": {"stoneType": "granite", "rodMetal": "copper"}},
+			{ "type": "item", "code": "grindingwheel", "attributes": {"stoneType": "granite", "rodMetal": "tinbronze"}},
+			{ "type": "item", "code": "grindingwheel", "attributes": {"stoneType": "granite", "rodMetal": "bismuthbronze"}},
+			{ "type": "item", "code": "grindingwheel", "attributes": {"stoneType": "granite", "rodMetal": "blackbronze"}},
+			{ "type": "item", "code": "grindingwheel", "attributes": {"stoneType": "granite", "rodMetal": "gold"}},
+			{ "type": "item", "code": "grindingwheel", "attributes": {"stoneType": "granite", "rodMetal": "silver"}},
+			{ "type": "item", "code": "grindingwheel", "attributes": {"stoneType": "granite", "rodMetal": "iron"}},
+			{ "type": "item", "code": "grindingwheel", "attributes": {"stoneType": "granite", "rodMetal": "meteoriciron"}},
+			{ "type": "item", "code": "grindingwheel", "attributes": {"stoneType": "granite", "rodMetal": "steel"}},
+			{ "type": "item", "code": "grindingwheel", "attributes": {"stoneType": "granite", "rodMetal": "cupronickel"}},
+			{ "type": "item", "code": "grindingwheel", "attributes": {"stoneType": "granite", "rodMetal": "electrum"}},
+
+			{ "type": "item", "code": "grindingwheel", "attributes": {"stoneType": "basalt", "rodMetal": "copper"}},
+			{ "type": "item", "code": "grindingwheel", "attributes": {"stoneType": "basalt", "rodMetal": "tinbronze"}},
+			{ "type": "item", "code": "grindingwheel", "attributes": {"stoneType": "basalt", "rodMetal": "bismuthbronze"}},
+			{ "type": "item", "code": "grindingwheel", "attributes": {"stoneType": "basalt", "rodMetal": "blackbronze"}},
+			{ "type": "item", "code": "grindingwheel", "attributes": {"stoneType": "basalt", "rodMetal": "gold"}},
+			{ "type": "item", "code": "grindingwheel", "attributes": {"stoneType": "basalt", "rodMetal": "silver"}},
+			{ "type": "item", "code": "grindingwheel", "attributes": {"stoneType": "basalt", "rodMetal": "iron"}},
+			{ "type": "item", "code": "grindingwheel", "attributes": {"stoneType": "basalt", "rodMetal": "meteoriciron"}},
+			{ "type": "item", "code": "grindingwheel", "attributes": {"stoneType": "basalt", "rodMetal": "steel"}},
+			{ "type": "item", "code": "grindingwheel", "attributes": {"stoneType": "basalt", "rodMetal": "cupronickel"}},
+			{ "type": "item", "code": "grindingwheel", "attributes": {"stoneType": "basalt", "rodMetal": "electrum"}},
+
+			{ "type": "item", "code": "grindingwheel", "attributes": {"stoneType": "peridotite", "rodMetal": "copper"}},
+			{ "type": "item", "code": "grindingwheel", "attributes": {"stoneType": "peridotite", "rodMetal": "tinbronze"}},
+			{ "type": "item", "code": "grindingwheel", "attributes": {"stoneType": "peridotite", "rodMetal": "bismuthbronze"}},
+			{ "type": "item", "code": "grindingwheel", "attributes": {"stoneType": "peridotite", "rodMetal": "blackbronze"}},
+			{ "type": "item", "code": "grindingwheel", "attributes": {"stoneType": "peridotite", "rodMetal": "gold"}},
+			{ "type": "item", "code": "grindingwheel", "attributes": {"stoneType": "peridotite", "rodMetal": "silver"}},
+			{ "type": "item", "code": "grindingwheel", "attributes": {"stoneType": "peridotite", "rodMetal": "iron"}},
+			{ "type": "item", "code": "grindingwheel", "attributes": {"stoneType": "peridotite", "rodMetal": "meteoriciron"}},
+			{ "type": "item", "code": "grindingwheel", "attributes": {"stoneType": "peridotite", "rodMetal": "steel"}},
+			{ "type": "item", "code": "grindingwheel", "attributes": {"stoneType": "peridotite", "rodMetal": "cupronickel"}},
+			{ "type": "item", "code": "grindingwheel", "attributes": {"stoneType": "peridotite", "rodMetal": "electrum"}},
+
+		]
+	}],
 
 	"shape": {
 		"base": "item/grindingwheel"
 	},
 
 	"textures": {
-		"stone": { "base": "game:block/stone/rock/{stone}*" },
-		"metal": { "base": "game:block/metal/ingot/{metal}*" }
+		"stone": { "base": "game:block/stone/rock/andesite*" },
+		"metal": { "base": "game:block/metal/ingot/copper*" }
 	},
 
 	"attributes": {
 		"shelvable": false,
-		"handbook": {
-			"groupBy": [ "grindingwheel-{stone}-*" ]
-		}
+		//"handbook": {
+		//	"groupBy": [ "grindingwheel-{stone}-*" ]
+		//}
 	},
 	"maxstacksize": 1,
 
