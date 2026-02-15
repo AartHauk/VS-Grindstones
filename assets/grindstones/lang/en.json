@@ -24,5 +24,6 @@
 	"item-grindingwheel-peridotite-*": "Peridotite Grinding Wheel",
 
 	"none": "none",
-	"Wheel: {0}": "Wheel: {0}"
+	"Wheel: {0}": "Wheel: {0}",
+	"{0} Grinding wheel with {1}": "{0} Grinding wheel with {1}"
 }
