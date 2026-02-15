@@ -21,5 +21,13 @@
 	"width": 3,
 	"height": 3,
 	"shapeless": false,
-	"output": { "type": "item", "code": "grindingwheel-{stone}-{rod}", "quantity": 1 }
+	"output": {
+		"type": "item",
+		"code": "grindingwheel",
+		"quantity": 1,
+		"attributes": {
+			"stoneType": "{stone}",
+			"rodMetal": "{rod}"
+		}
+	}
 }
