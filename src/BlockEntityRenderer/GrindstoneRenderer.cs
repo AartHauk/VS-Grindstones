@@ -2,6 +2,7 @@
 using System.Net;
 using Vintagestory.API.Client;
 using Vintagestory.API.MathTools;
+using Vintagestory.API.Util;
 
 #nullable disable
 
@@ -44,6 +45,7 @@ namespace Grindstones
 
 		float lastAngle = 0f;
 
+		int textureID = 0;
 		public void OnRenderFrame (float deltaTime, EnumRenderStage stage)
 		{
 			if (wheelMeshRef is null) return;
@@ -71,7 +73,7 @@ namespace Grindstones
 			prog.ExtraGodray = 0;
 			prog.NormalShaded = 1;
 
-			rpi.BindTexture2d(api.ItemTextureAtlas.AtlasTextures[0].TextureId);
+			rpi.BindTexture2d(textureID);
 
 			float origx = -0.5f;
 			float origy = -0.25f;
@@ -117,9 +119,14 @@ namespace Grindstones
 			if (wheelMesh is not null)
 			{
 				wheelMeshRef = api.Render.UploadMesh(wheelMesh);
+				textureID = wheelMesh.TextureIds[0];
+			}
+			else
+			{
+				textureID = api.ItemTextureAtlas.AtlasTextures[0].TextureId;
 			}
 
-			updatedTotalMs = api.InWorldEllapsedMilliseconds;
+				updatedTotalMs = api.InWorldEllapsedMilliseconds;
 		}
 
 		public void Dispose ()

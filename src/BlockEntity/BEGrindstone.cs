@@ -276,7 +276,7 @@ namespace Grindstones
 		{
 			if (HasWheel)
 			{
-				if (wheelMesh == null) wheelMesh = getOrCreateMesh(capi, "grindstones:grindingwheel" + inventory[0].Itemstack.Collectible.LastCodePart() + "Mesh", (cp) => createWheelMesh(cp));
+				if (wheelMesh == null) wheelMesh = getOrCreateMesh(capi, "grindstones:item-grindingwheel" + $"-{inventory[0].Itemstack.Attributes.GetString("stoneType", "andesite")}-{inventory[0].Itemstack.Attributes.GetString("rodMetal", "copper")}-" + "Mesh", (cp) => createWheelMesh(cp));
 			}
 			else
 			{
@@ -286,9 +286,11 @@ namespace Grindstones
 			renderer.UpdateMeshes(wheelMesh, IsSharpening);
 		}
 
-		private MeshData createWheelMesh (ICoreClientAPI cp)
+		private MeshData createWheelMesh (ICoreClientAPI capi)
 		{
-			cp.Tesselator.TesselateItem(inventory[0].Itemstack.Item, out MeshData wheelMesh);
+			ItemGrindingwheel wheel = inventory[0].Itemstack.Item as ItemGrindingwheel;
+			MeshData wheelMesh = wheel.GenMesh(inventory[0].Itemstack, capi.ItemTextureAtlas, null);
+			//capi.Tesselator.TesselateItem(inventory[0].Itemstack.Item, out MeshData wheelMesh);
 			return wheelMesh;
 		}
 
@@ -371,7 +373,6 @@ namespace Grindstones
 		public override void GetBlockInfo (IPlayer forPlayer, StringBuilder dsc)
 		{
 			string wheel = inventory[0].GetStackName() ?? Lang.Get("none");
-
 			dsc.AppendLine(Lang.Get("Wheel: {0}", wheel));
 		}
 
