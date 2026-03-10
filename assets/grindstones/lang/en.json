@@ -1,21 +1,10 @@
 {
 	"game:tabname-grindstones": "Grindstones",
 
-	// Grindstone Variants
-	"block-grindstone-aged-*": "Grindstone (Aged)",
-	"block-grindstone-birch-*": "Grindstone (Birch)",
-	"block-grindstone-oak-*": "Grindstone (Oak)",
-	"block-grindstone-maple-*": "Grindstone (Maple)",
-	"block-grindstone-pine-*": "Grindstone (Pine)",
-	"block-grindstone-acacia-*": "Grindstone (Acacia)",
-	"block-grindstone-kapok-*": "Grindstone (Kapok)",
-	"block-grindstone-redwood-*": "Grindstone (Redwood)",
-	"block-grindstone-baldcypress-*": "Grindstone (Bald cypress)",
-	"block-grindstone-larch-*": "Grindstone (Larch)",
-	"block-grindstone-ebony-*": "Grindstone (Ebony)",
-	"block-grindstone-walnut-*": "Grindstone (Walnut)",
-	"block-grindstone-purpleheart-*": "Grindstone (Purpleheart)",
-	// "block-grindstone-*": "Grindstone",
+	// General formatting so I don't have to do as much lang file work
+	"Grindstone ({0})": "Grindstone ({0})",
+	"{0} Grinding Wheel": "{0} Grinding Wheel",
+
 
 	// Grinding Wheel Variants
 	"item-grindingwheel-andesite-*": "Andesite Grinding Wheel",

@@ -1,0 +1,18 @@
+[
+	{
+		"file": "grindstones:blocktypes/grindstone.json",
+		"op": "addmerge",
+		"path": "/variantgroups/0/loadFromPropertiesCombine/-",
+		"value": "wildcrafttree:block/wood",
+		"side": "server",
+		"dependsOn": [ { "modid": "wildcrafttree" } ]
+	},
+	{
+		"file": "grindstones:recipes/grid/compatability/wildcrafttree/grindstone.json",
+		"op": "replace",
+		"path": "/enabled",
+		"value": true,
+		"side": "server",
+		"dependsOn": [ { "modid": "wildcrafttree" } ]
+	}
+]
