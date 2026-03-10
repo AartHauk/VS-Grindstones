@@ -3,19 +3,7 @@
 
 	// General formatting so I don't have to do as much lang file work
 	"Grindstone ({0})": "Grindstone ({0})",
-	"{0} Grinding Wheel": "{0} Grinding Wheel",
-
-
-	// Grinding Wheel Variants
-	"item-grindingwheel-andesite-*": "Andesite Grinding Wheel",
-	"item-grindingwheel-granite-*": "Granite Grinding Wheel",
-	"item-grindingwheel-basalt-*": "Basalt Grinding Wheel",
-	"item-grindingwheel-peridotite-*": "Peridotite Grinding Wheel",
-
-	// Geology Additions compatability
-	"item-grindingwheel-rhyolite-*": "Rhyolite Grinding Wheel",
-	"item-grindingwheel-diorite-*": "Diorite Grinding Wheel",
-	"item-grindingwheel-gabbro-*": "Gabbro Grinding Wheel",
+	"{0} Grinding Wheel with {1}": "{0} Grinding Wheel with {1}",
 
 	"none": "none",
 	"Wheel: {0}": "Wheel: {0}"
