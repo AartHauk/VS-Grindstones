@@ -23,6 +23,11 @@
 	"item-grindingwheel-basalt-*": "Basalt Grinding Wheel",
 	"item-grindingwheel-peridotite-*": "Peridotite Grinding Wheel",
 
+	// Geology Additions compatability
+	"item-grindingwheel-rhyolite-*": "Rhyolite Grinding Wheel",
+	"item-grindingwheel-diorite-*": "Diorite Grinding Wheel",
+	"item-grindingwheel-gabbro-*": "Gabbro Grinding Wheel",
+
 	"none": "none",
 	"Wheel: {0}": "Wheel: {0}"
 }
