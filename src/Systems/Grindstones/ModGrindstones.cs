@@ -45,6 +45,8 @@ namespace Grindstones
 			harmony = new Harmony(ModID);
 			harmony.PatchAll();
 
+			api.RegisterItemClass(ModID + ".grindingwheel", typeof(ItemGrindingwheel));
+
 			api.RegisterBlockClass(ModID + ".grindstone", typeof(BlockGrindstone));
 			api.RegisterBlockEntityClass(ModID + ".begrindstone", typeof(BlockEntityGrindstone));
 		}

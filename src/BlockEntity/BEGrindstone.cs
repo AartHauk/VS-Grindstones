@@ -370,14 +370,7 @@ namespace Grindstones
 
 		public override void GetBlockInfo (IPlayer forPlayer, StringBuilder dsc)
 		{
-			string wheel = Lang.Get("none");
-			if (HasWheel)
-			{
-				string stone = Lang.Get("game:rock-" + inventory[0].Itemstack.Item.Variant["stone"]);
-				string metal = Lang.Get("game:item-rod-" + inventory[0].Itemstack.Item.Variant["metal"]);
-
-				wheel = Lang.Get("{0} Grinding Wheel with {1}", stone, metal);
-			}
+			string wheel = inventory[0].GetStackName() ?? Lang.Get("none");
 
 			dsc.AppendLine(Lang.Get("Wheel: {0}", wheel));
 		}

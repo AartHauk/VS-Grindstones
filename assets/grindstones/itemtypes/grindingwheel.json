@@ -1,5 +1,6 @@
 {
 	"code": "grindingwheel",
+	"class":  "grindstones.grindingwheel",
 
 	"variantgroups": [
 		{
