@@ -61,6 +61,27 @@ namespace Grindstones
 			return true;
 		}
 
+		public override string GetHeldItemName (ItemStack itemStack)
+		{
+			if (Code == null)
+			{
+				return "Invalid block, id " + Id;
+			}
+
+			string woodtype = this.Variant["wood"];
+
+			string text = ItemClass.Name();
+			StringBuilder stringBuilder = new StringBuilder();
+			stringBuilder.Append(Lang.GetMatching("Grindstone ({0})", Lang.GetMatching("game:material-" + woodtype)));
+			CollectibleBehavior[] collectibleBehaviors = CollectibleBehaviors;
+			for (int i = 0; i < collectibleBehaviors.Length; i++)
+			{
+				collectibleBehaviors[i].GetHeldItemName(stringBuilder, itemStack);
+			}
+
+			return stringBuilder.ToString();
+		}
+
 		public override ItemStack OnPickBlock (IWorldAccessor world, BlockPos pos)
 		{
 			string wood = this.Variant["wood"];

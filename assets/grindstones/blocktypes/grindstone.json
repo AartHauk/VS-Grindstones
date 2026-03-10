@@ -14,7 +14,7 @@
 		{
 			"code": "wood",
 			"states": [ "aged" ],
-			"loadFromProperties": "block/wood"
+			"loadFromPropertiesCombine": [ "block/wood" ]
 		},
 		{
 			"code": "side",
