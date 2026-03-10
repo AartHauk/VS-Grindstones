@@ -1,0 +1,18 @@
+[
+	{
+		"file": "grindstones:itemtypes/grindingwheel.json",
+		"op": "addeach",
+		"path": "/variantgroups/0/states/-",
+		"value": [ "rhyolite", "diorite", "gabbro" ],
+		"side": "server",
+		"dependsOn": [ { "modid": "geoaddons" } ]
+	},
+	{
+		"file": "grindstones:recipes/grid/grindingwheel.json",
+		"op": "addeach",
+		"path": "/ingredients/S/allowedVariants/-",
+		"value": [ "rhyolite", "diorite", "gabbro" ],
+		"side": "server",
+		"dependsOn": [ { "modid": "geoaddons" } ]
+	}
+]
