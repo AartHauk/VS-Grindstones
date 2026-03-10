@@ -276,7 +276,7 @@ namespace Grindstones
 		{
 			if (HasWheel)
 			{
-				if (wheelMesh == null) wheelMesh = getOrCreateMesh(capi, "grindstones:grindingwheel" + inventory[0].Itemstack.Collectible.LastCodePart() + "Mesh", (cp) => createWheelMesh(cp));
+				if (wheelMesh == null) wheelMesh = getOrCreateMesh(capi, "grindstones:grindingwheel" + inventory[0].Itemstack.Collectible.CodeEndWithoutParts(0) + "Mesh", (cp) => createWheelMesh(cp));
 			}
 			else
 			{
