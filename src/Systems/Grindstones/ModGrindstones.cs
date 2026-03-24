@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using ProtoBuf;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,7 +7,10 @@ using System.Text;
 using System.Threading.Tasks;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
+using Vintagestory.API.Config;
 using Vintagestory.API.Server;
+using Vintagestory.Server;
+
 
 #nullable disable
 
@@ -22,6 +26,8 @@ namespace Grindstones
 		private static Harmony harmony;
 
 		public override double ExecuteOrder () => 0.3;
+
+		//public static INetworkChannel modChannel;
 
 		public ModGrindstones() :base()
 		{
@@ -49,23 +55,45 @@ namespace Grindstones
 
 			api.RegisterBlockClass(ModID + ".grindstone", typeof(BlockGrindstone));
 			api.RegisterBlockEntityClass(ModID + ".begrindstone", typeof(BlockEntityGrindstone));
+
+			
+			api.Network.RegisterChannel(ModID + ".NetworkChannel")
+				.RegisterMessageType<ConfigUpdated>();
 		}
 
+		IClientNetworkChannel clientChannel;
+		ICoreClientAPI capi;
 		public override void StartClientSide (ICoreClientAPI api)
 		{
 			Logger.Event("StartClientSide Called.");
 			base.StartClientSide(api);
 
 			GetServerSettings(api);
+
+			capi = api;
+
+			clientChannel = api.Network.GetChannel(ModID + ".NetworkChannel")
+				.SetMessageHandler<ConfigUpdated>(OnConfigUpdated);
 		}
+
+		private void OnConfigUpdated (ConfigUpdated config)
+		{
+			GetServerSettings(capi);
+		}
+
+		IServerNetworkChannel serverChannel;
+		ICoreServerAPI sapi;
 		public override void StartServerSide (ICoreServerAPI api)
 		{
 			Logger.Event("StartServerSide Called.");
 			base.StartServerSide(api);
 
 			TryLoadServerConfig(api);
+	
+			sapi = api;
+			serverChannel = api.Network.GetChannel(ModID + ".NetworkChannel");
 
-			// CreateServerCommands(api);
+			CreateServerCommands(api);
 		}
 
 		public override void Dispose ()
@@ -131,19 +159,74 @@ namespace Grindstones
 		// TODO Add the ability to change settings on the fly
 		private void CreateServerCommands(ICoreAPI api)
 		{
+			//api.ChatCommands.Create("GTest")
+			//	.WithDescription("Test Command Callback")
+			//	.RequiresPrivilege(Privilege.controlserver)
+			//	.HandleWith((args) =>
+			//	{
+			//		sapi.SendMessageToGroup(
+			//			GlobalConstants.GeneralChatGroup,
+			//			"Testing Network Calls...",
+			//			EnumChatType.Notification
+			//		);
+			//		Logger.Debug("Sending test packet");
+			//		serverChannel.BroadcastPacket(new ConfigUpdated());
+			//		return TextCommandResult.Success();
+			//	})
+			//	.Validate();
+
 			api.ChatCommands.Create("GConfig")
 				.WithDescription("Change Grindstones mod config settings on the fly")
 				.RequiresPrivilege(Privilege.controlserver)
 				.BeginSubCommand("ratio")
-				.WithDescription("Change the ratio of MaxLoss to Gain.")
-				.WithArgs(new StringArgParser("ratio", true))
-				.HandleWith((args) =>
-				{
-					ConfigServer.RatioMaxDurabilityLossToDurabilityGain = args.LastArg.ToString();
-					return TextCommandResult.Success();
-				})
-				.EndSubCommand()
+					.WithDescription("Change the ratio of MaxLoss to Gain.")
+					.WithArgs(new StringArgParser("ratio", true))
+					.HandleWith(OnUpdateRatio)
+					.EndSubCommand()
+				.Validate();
+
+			api.ChatCommands.Create("GSettings")
+				.WithDescription("Gets the settings values for the Grindstones mod.")
+				.RequiresPrivilege(Privilege.controlserver)
+				.BeginSubCommand("ratio")
+					.WithDescription("View the currently set ratio of MaxLoss to Gain.")
+					.HandleWith((args) =>
+					{
+						string message = "Current ratio: " + ConfigServer.RatioMaxDurabilityLossToDurabilityGain;
+						sapi.SendMessage(
+							args.Caller.Player,
+							GlobalConstants.InfoLogChatGroup,
+							message,
+							EnumChatType.Notification
+						);
+						return TextCommandResult.Success();
+					})
+					.EndSubCommand()
 				.Validate();
 		}
+
+		private TextCommandResult OnUpdateRatio(TextCommandCallingArgs args)
+		{
+			string previousratio = ConfigServer.RatioMaxDurabilityLossToDurabilityGain;
+			string ratio = args.LastArg.ToString();
+			string message = "Updating Grindstones repair ratio from " + previousratio + " to " + ratio + ".";
+
+			ConfigServer.RatioMaxDurabilityLossToDurabilityGain = ratio;
+			sapi.World.Config.SetString(ModID + ".Ratio", ConfigServer.RatioMaxDurabilityLossToDurabilityGain);
+			sapi.StoreModConfig<GrindstonesConfigServer>(ConfigServer, configFile);
+			serverChannel.BroadcastPacket(new ConfigUpdated());
+
+			sapi.SendMessageToGroup(
+				GlobalConstants.InfoLogChatGroup,
+				message,
+				EnumChatType.Notification
+			);
+			Logger.Notification(message);
+
+			return TextCommandResult.Success();
+		}
 	}
+
+	[ProtoContract]
+	public class ConfigUpdated {}
 }
