@@ -116,9 +116,9 @@ namespace Grindstones
 			ConfigServer = serverConfig;
 
 			api.World.Config.SetString(ModID + ".Ratio", serverConfig.RatioMaxDurabilityLossToDurabilityGain);
+			api.World.Config.SetBool(ModID + ".Safe", serverConfig.SafeSharpening);
 			api.World.Config.SetString(ModID + ".ToolBlackList", string.Join(",", serverConfig.NotRepairableToolTypes));
 			api.World.Config.SetString(ModID + ".MaterialWhitelist", string.Join(",", serverConfig.AllowedRepairableMaterials));
-			api.World.Config.SetBool(ModID + ".Safe", serverConfig.SafeSharpening);
 		}
 
 		// TODO Add the ability to change settings on the fly
@@ -224,6 +224,7 @@ namespace Grindstones
 			clientChannel = api.Network.GetChannel(ModID + ".NetworkChannel")
 				.SetMessageHandler<UpdateConfig>(OnConfigUpdated);
 
+			// TODO Rework this command to be better for client
 			api.ChatCommands.Create("GSettings")
 				.WithDescription("Gets the settings values for the Grindstones mod.")
 				.RequiresPrivilege(Privilege.controlserver)
@@ -242,10 +243,10 @@ namespace Grindstones
 		private void GetServerSettings(ICoreAPI api)
 		{
 			Logger.Event("Recieving config settings from server.");
-			ConfigServer.RatioMaxDurabilityLossToDurabilityGain = api.World.Config.GetString(ModID + ".Ratio", ConfigServer.RatioMaxDurabilityLossToDurabilityGain);
-			ConfigServer.NotRepairableToolTypes = [..api.World.Config.GetString(ModID + ".ToolBlackList", string.Join(",", ConfigServer.NotRepairableToolTypes)).Split(",")];
-			ConfigServer.AllowedRepairableMaterials = [..api.World.Config.GetString(ModID + ".MaterialWhitelist", string.Join(",", ConfigServer.AllowedRepairableMaterials)).Split(",")];
-			ConfigServer.SafeSharpening = api.World.Config.GetBool(ModID + ".Safe", ConfigServer.SafeSharpening);
+			ConfigServer.RatioMaxDurabilityLossToDurabilityGain = api.World.Config.GetString(ModID + ".Ratio", GrindstonesConfigServer.DefaultRepairRatio);
+			ConfigServer.SafeSharpening = api.World.Config.GetBool(ModID + ".Safe", GrindstonesConfigServer.DefaultSafeSharpening);
+			ConfigServer.NotRepairableToolTypes = [..api.World.Config.GetString(ModID + ".ToolBlackList", string.Join(",", GrindstonesConfigServer.DefaultDisallowedTools)).Split(",")];
+			ConfigServer.AllowedRepairableMaterials = [..api.World.Config.GetString(ModID + ".MaterialWhitelist", string.Join(",",GrindstonesConfigServer.DefaultAllowedMaterials)).Split(",")];
 		}
 
 		private void OnConfigUpdated (UpdateConfig config)
@@ -263,7 +264,6 @@ namespace Grindstones
 			base.Dispose();
 			harmony?.UnpatchAll(ModID);
 		}
-
 	}
 
 	[ProtoContract]
