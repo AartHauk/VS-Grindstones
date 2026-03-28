@@ -3,11 +3,13 @@ using ProtoBuf;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
+using Vintagestory.API.Datastructures;
 using Vintagestory.API.Server;
 using Vintagestory.Server;
 
@@ -26,8 +28,6 @@ namespace Grindstones
 		private static Harmony harmony;
 
 		public override double ExecuteOrder () => 0.3;
-
-		//public static INetworkChannel modChannel;
 
 		public ModGrindstones() :base()
 		{
@@ -58,29 +58,10 @@ namespace Grindstones
 
 			
 			api.Network.RegisterChannel(ModID + ".NetworkChannel")
-				.RegisterMessageType<ConfigUpdated>();
+				.RegisterMessageType<UpdateConfig>();
 		}
 
-		IClientNetworkChannel clientChannel;
-		ICoreClientAPI capi;
-		public override void StartClientSide (ICoreClientAPI api)
-		{
-			Logger.Event("StartClientSide Called.");
-			base.StartClientSide(api);
-
-			GetServerSettings(api);
-
-			capi = api;
-
-			clientChannel = api.Network.GetChannel(ModID + ".NetworkChannel")
-				.SetMessageHandler<ConfigUpdated>(OnConfigUpdated);
-		}
-
-		private void OnConfigUpdated (ConfigUpdated config)
-		{
-			GetServerSettings(capi);
-		}
-
+		#region Server
 		IServerNetworkChannel serverChannel;
 		ICoreServerAPI sapi;
 		public override void StartServerSide (ICoreServerAPI api)
@@ -94,13 +75,6 @@ namespace Grindstones
 			serverChannel = api.Network.GetChannel(ModID + ".NetworkChannel");
 
 			CreateServerCommands(api);
-		}
-
-		public override void Dispose ()
-		{
-			Logger.Event("Dispose Called.");
-			base.Dispose();
-			harmony?.UnpatchAll(ModID);
 		}
 
 		private readonly string configFile = "GrindstonesConfig.json";
@@ -147,34 +121,9 @@ namespace Grindstones
 			api.World.Config.SetBool(ModID + ".Safe", serverConfig.SafeSharpening);
 		}
 
-		private void GetServerSettings(ICoreAPI api)
-		{
-			Logger.Event("Recieving config settings from server.");
-			ConfigServer.RatioMaxDurabilityLossToDurabilityGain = api.World.Config.GetString(ModID + ".Ratio", ConfigServer.RatioMaxDurabilityLossToDurabilityGain);
-			ConfigServer.NotRepairableToolTypes = [..api.World.Config.GetString(ModID + ".ToolBlackList", string.Join(",", ConfigServer.NotRepairableToolTypes)).Split(",")];
-			ConfigServer.AllowedRepairableMaterials = [..api.World.Config.GetString(ModID + ".MaterialWhitelist", string.Join(",", ConfigServer.AllowedRepairableMaterials)).Split(",")];
-			ConfigServer.SafeSharpening = api.World.Config.GetBool(ModID + ".Safe", ConfigServer.SafeSharpening);
-		}
-
 		// TODO Add the ability to change settings on the fly
 		private void CreateServerCommands(ICoreAPI api)
 		{
-			//api.ChatCommands.Create("GTest")
-			//	.WithDescription("Test Command Callback")
-			//	.RequiresPrivilege(Privilege.controlserver)
-			//	.HandleWith((args) =>
-			//	{
-			//		sapi.SendMessageToGroup(
-			//			GlobalConstants.GeneralChatGroup,
-			//			"Testing Network Calls...",
-			//			EnumChatType.Notification
-			//		);
-			//		Logger.Debug("Sending test packet");
-			//		serverChannel.BroadcastPacket(new ConfigUpdated());
-			//		return TextCommandResult.Success();
-			//	})
-			//	.Validate();
-
 			api.ChatCommands.Create("GConfig")
 				.WithDescription("Change Grindstones mod config settings on the fly")
 				.RequiresPrivilege(Privilege.controlserver)
@@ -182,6 +131,11 @@ namespace Grindstones
 					.WithDescription("Change the ratio of MaxLoss to Gain.")
 					.WithArgs(new StringArgParser("ratio", true))
 					.HandleWith(OnUpdateRatio)
+					.EndSubCommand()
+				.BeginSubCommand("safety")
+					.WithDescription("Change the state of the Safe Shapening setting.")
+					.WithArgs(new BoolArgParser("safety", "safety", true))
+					.HandleWith(OnUpdateSafety)
 					.EndSubCommand()
 				.Validate();
 
@@ -192,7 +146,8 @@ namespace Grindstones
 					.WithDescription("View the currently set ratio of MaxLoss to Gain.")
 					.HandleWith((args) =>
 					{
-						string message = "Current ratio: " + ConfigServer.RatioMaxDurabilityLossToDurabilityGain;
+						string message = "Current ratio in config: " + ConfigServer.RatioMaxDurabilityLossToDurabilityGain
+									  +"\nCurrent ratio in world : " + api.World.Config.GetAsString(ModID + ".Ratio");
 						sapi.SendMessage(
 							args.Caller.Player,
 							GlobalConstants.InfoLogChatGroup,
@@ -208,13 +163,16 @@ namespace Grindstones
 		private TextCommandResult OnUpdateRatio(TextCommandCallingArgs args)
 		{
 			string previousratio = ConfigServer.RatioMaxDurabilityLossToDurabilityGain;
-			string ratio = args.LastArg.ToString();
-			string message = "Updating Grindstones repair ratio from " + previousratio + " to " + ratio + ".";
+			string ratio = args.LastArg as string;
+			string message = args.Caller.Player.PlayerName + " updated Grindstones repair ratio from " + previousratio + " to " + ratio + ".";
 
 			ConfigServer.RatioMaxDurabilityLossToDurabilityGain = ratio;
-			sapi.World.Config.SetString(ModID + ".Ratio", ConfigServer.RatioMaxDurabilityLossToDurabilityGain);
+			sapi.World.Config.SetString(ModID + ".Ratio", ratio);
 			sapi.StoreModConfig<GrindstonesConfigServer>(ConfigServer, configFile);
-			serverChannel.BroadcastPacket(new ConfigUpdated());
+			serverChannel.BroadcastPacket(new UpdateConfig()
+			{
+				ratio = ratio,
+			});
 
 			sapi.SendMessageToGroup(
 				GlobalConstants.InfoLogChatGroup,
@@ -225,8 +183,102 @@ namespace Grindstones
 
 			return TextCommandResult.Success();
 		}
+
+		private TextCommandResult OnUpdateSafety(TextCommandCallingArgs args)
+		{
+			bool previoussafety = ConfigServer.SafeSharpening;
+			bool safety = (bool) args.LastArg;
+			string message = args.Caller.Player.PlayerName + " updated Grindstones repair saftey from " + previoussafety + " to " + safety + ".";
+
+			ConfigServer.SafeSharpening = safety;
+			sapi.World.Config.SetBool(ModID + ".Safe", safety);
+			sapi.StoreModConfig<GrindstonesConfigServer>(ConfigServer, configFile);
+			serverChannel.BroadcastPacket(new UpdateConfig()
+			{
+				safe = safety,
+			});
+
+			sapi.SendMessageToGroup(
+				GlobalConstants.InfoLogChatGroup,
+				message,
+				EnumChatType.Notification
+			);
+			Logger.Notification(message);
+
+			return TextCommandResult.Success();
+		}
+		#endregion
+
+		#region Client
+		IClientNetworkChannel clientChannel;
+		ICoreClientAPI capi;
+		public override void StartClientSide (ICoreClientAPI api)
+		{
+			Logger.Event("StartClientSide Called.");
+			base.StartClientSide(api);
+
+			GetServerSettings(api);
+
+			capi = api;
+
+			clientChannel = api.Network.GetChannel(ModID + ".NetworkChannel")
+				.SetMessageHandler<UpdateConfig>(OnConfigUpdated);
+
+			api.ChatCommands.Create("GSettings")
+				.WithDescription("Gets the settings values for the Grindstones mod.")
+				.RequiresPrivilege(Privilege.controlserver)
+				.BeginSubCommand("cratio")
+					.WithDescription("View the currently set ratio of MaxLoss to Gain.")
+					.HandleWith((args) =>
+					{
+						string message = "Current ratio in config: " + ConfigServer.RatioMaxDurabilityLossToDurabilityGain
+									  +"\nCurrent ratio in world : " + api.World.Config.GetAsString(ModID + ".Ratio");
+						capi.SendChatMessage(message);
+						return TextCommandResult.Success();
+					})
+					.EndSubCommand()
+				.Validate();
+		}
+		private void GetServerSettings(ICoreAPI api)
+		{
+			Logger.Event("Recieving config settings from server.");
+			ConfigServer.RatioMaxDurabilityLossToDurabilityGain = api.World.Config.GetString(ModID + ".Ratio", ConfigServer.RatioMaxDurabilityLossToDurabilityGain);
+			ConfigServer.NotRepairableToolTypes = [..api.World.Config.GetString(ModID + ".ToolBlackList", string.Join(",", ConfigServer.NotRepairableToolTypes)).Split(",")];
+			ConfigServer.AllowedRepairableMaterials = [..api.World.Config.GetString(ModID + ".MaterialWhitelist", string.Join(",", ConfigServer.AllowedRepairableMaterials)).Split(",")];
+			ConfigServer.SafeSharpening = api.World.Config.GetBool(ModID + ".Safe", ConfigServer.SafeSharpening);
+		}
+
+		private void OnConfigUpdated (UpdateConfig config)
+		{
+			ConfigServer.RatioMaxDurabilityLossToDurabilityGain = config.ratio;
+			ConfigServer.SafeSharpening = config.safe;
+			ConfigServer.NotRepairableToolTypes = [..config.DisallowedTools];
+			ConfigServer.AllowedRepairableMaterials = [..config.AllowedMaterials];
+		}
+		#endregion
+
+		public override void Dispose ()
+		{
+			Logger.Event("Dispose Called.");
+			base.Dispose();
+			harmony?.UnpatchAll(ModID);
+		}
+
 	}
 
 	[ProtoContract]
-	public class ConfigUpdated {}
+	public class UpdateConfig
+	{
+		[ProtoMember(1)]
+		public string ratio = ModGrindstones.ConfigServer.RatioMaxDurabilityLossToDurabilityGain;
+
+		[ProtoMember(2)]
+		public bool safe = ModGrindstones.ConfigServer.SafeSharpening;
+
+		[ProtoMember(3)]
+		public string[] DisallowedTools = ModGrindstones.ConfigServer.NotRepairableToolTypes.ToArray();
+		
+		[ProtoMember(4)]
+		public string[] AllowedMaterials = ModGrindstones.ConfigServer.AllowedRepairableMaterials.ToArray();
+	}
 }
