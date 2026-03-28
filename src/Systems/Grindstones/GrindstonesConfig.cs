@@ -1,21 +1,52 @@
-﻿using HarmonyLib;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Collections.Immutable;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Runtime.Serialization;
-using Vintagestory.API.Util;
 
 namespace Grindstones
 {
 	public class GrindstonesConfigServer
 	{
+		#region defaults
+		[JsonIgnore]
+		public const string DefaultRepairRatio = "1:4";
+		[JsonIgnore]
+		public const bool DefaultSafeSharpening = false;
+		[JsonIgnore]
+		public static readonly ImmutableHashSet<string> DefaultDisallowedTools = [
+			"bow",
+			"sling",
+			"firearm",
+			"crossbow","shield"
+		];
+
+		[JsonIgnore]
+		public static readonly ImmutableHashSet<string> DefaultAllowedMaterials = [
+			"unspecified",
+			"copper",
+			"tinbronze",
+			"bismuthbronze",
+			"blackbronze",
+			"gold",
+			"silver",
+			"iron",
+			"meteoriciron",
+			"steel",
+			"ornategold",
+			"ornatesilver"
+		];
+		#endregion
+
 		public int ConfigVersion = 2;
-
-		public string RatioMaxDurabilityLossToDurabilityGain = "1:4";
-
-		public bool SafeSharpening = false;
+		[Obsolete("Version 1 config setting, use MaxDuabilityLoss and DurabilityGain instead.")]
+		public int DurabilityPointsRepairedPerPointLost = 4;
+		public string RatioMaxDurabilityLossToDurabilityGain = DefaultRepairRatio;
+		public bool SafeSharpening = DefaultSafeSharpening;
+		public HashSet<string> NotRepairableToolTypes = DefaultDisallowedTools.ToHashSet();
+		public HashSet<string> AllowedRepairableMaterials = DefaultAllowedMaterials.ToHashSet();
 
 		[JsonIgnore]
 		public int MaxDurabilityLoss
@@ -39,41 +70,15 @@ namespace Grindstones
 			}
 		}
 
-		public HashSet<string> NotRepairableToolTypes = new HashSet<string>(){
-			"Bow",
-			"Sling",
-			"Firearm",
-			"Crossbow",
-			"Shield"
-		};
-
 		public bool IsRepairableTool (string tool)
 		{
 			return !NotRepairableToolTypes.Contains(tool?.ToLower() ?? "unspecified");
 		}
 
-		public HashSet<string> AllowedRepairableMaterials = new HashSet<string>(){
-			"unspecified",
-			"copper",
-			"tinbronze",
-			"bismuthbronze",
-			"blackbronze",
-			"gold",
-			"silver",
-			"iron",
-			"meteoriciron",
-			"steel",
-			"ornategold",
-			"ornatesilver"
-		};
-
 		public bool IsRepairableMaterial (string material)
 		{
 			return AllowedRepairableMaterials.Contains(material?.ToLower() ?? "unspecified");
 		}
-
-		[Obsolete("Version 1 config setting, use MaxDuabilityLoss and DurabilityGain instead.")]
-		public int DurabilityPointsRepairedPerPointLost = 4;
 
 		public bool ShouldSerializeDurabilityPointsRepairedPerPointLost () { return false; }
 
