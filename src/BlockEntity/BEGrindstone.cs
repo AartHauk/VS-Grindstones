@@ -153,7 +153,7 @@ namespace Grindstones
 			Item heldItem = heldItemStack.Item;
 
 			// Check if item can be repaired
-			if (!isRepariable(heldItem))
+			if (!IsRepairable(heldItem))
 			{
 				if (IsSharpening)
 				{
@@ -384,7 +384,7 @@ namespace Grindstones
 			return base.OnTesselation(mesher, tessThreadTesselator);
 		}
 
-		internal static bool isRepariable (Item item)
+		private static bool IsRepairable (Item item)
 		{
 			// Ensure this is an item
 			if (item is null) return false;
