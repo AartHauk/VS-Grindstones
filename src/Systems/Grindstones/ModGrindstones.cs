@@ -1,18 +1,11 @@
 ﻿using HarmonyLib;
 using ProtoBuf;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
-using Vintagestory.API.Datastructures;
 using Vintagestory.API.Server;
-using Vintagestory.API.Util;
-using Vintagestory.Server;
 
 
 #nullable disable
@@ -21,7 +14,6 @@ namespace Grindstones
 {
 	public class ModGrindstones : ModSystem
 	{
-		public static ModGrindstones Instance { get; private set; }
 		public static string ModID;
 		public static ILogger Logger;
 		public static GrindstonesConfigServer ConfigServer;
@@ -30,9 +22,8 @@ namespace Grindstones
 
 		public override double ExecuteOrder () => 0.3;
 
-		public ModGrindstones() :base()
+		public ModGrindstones()
 		{
-			Instance ??= this;
 			ConfigServer ??= new GrindstonesConfigServer();
 		}
 
@@ -42,7 +33,7 @@ namespace Grindstones
 			ModID ??= Mod.Info.ModID;
 			Logger ??= Mod.Logger;
 
-			IdentityKey.Domain = ModID;
+			IdentityKey.SetDomain(ModID);
 		}
 
 		public override void Start (ICoreAPI api)
@@ -90,12 +81,7 @@ namespace Grindstones
 			GrindstonesConfigServer serverConfig;
 			try
 			{
-				serverConfig = api.LoadModConfig<GrindstonesConfigServer>(configFile);
-
-				if (serverConfig is null)
-				{
-					serverConfig = new GrindstonesConfigServer();
-				}
+				serverConfig = api.LoadModConfig<GrindstonesConfigServer>(configFile) ?? new GrindstonesConfigServer();
 
 				if (serverConfig.ConfigVersion == 1)
 				{
@@ -112,7 +98,7 @@ namespace Grindstones
 					serverConfig.ConfigVersion = 3;
 				}
 
-				api.StoreModConfig<GrindstonesConfigServer>(serverConfig, configFile);
+				api.StoreModConfig(serverConfig, configFile);
 			}
 			catch (Exception e)
 			{
@@ -133,6 +119,7 @@ namespace Grindstones
 		}
 
 		// TODO Add the ability to change settings on the fly
+		// TODO Create helper class/method to generate commands
 		private void CreateServerCommands(ICoreAPI api)
 		{
 			api.ChatCommands.Create("GConfig")
@@ -156,7 +143,7 @@ namespace Grindstones
 				.BeginSubCommand("blacklist")
 					.WithDescription("Add/Remove item from Grindstone blacklist.")
 					.WithArgs([new WordArgParser("action", true, ["add", "remove"]), new StringArgParser("item", false)])
-					.HandleWith(OnUpdateWhitelist)
+					.HandleWith(OnUpdateBlacklist)
 					.EndSubCommand()
 				.Validate();
 
@@ -193,13 +180,13 @@ namespace Grindstones
 
 		private TextCommandResult OnUpdateRatio(TextCommandCallingArgs args)
 		{
-			string previousratio = ConfigServer.RatioMaxDurabilityLossToDurabilityGain;
+			string oldRatio = ConfigServer.RatioMaxDurabilityLossToDurabilityGain;
 			string ratio = args.LastArg as string;
-			string message = args.Caller.Player.PlayerName + " updated Grindstones repair ratio from " + previousratio + " to " + ratio + ".";
+			string message = args.Caller.Player.PlayerName + " updated Grindstones repair ratio from " + oldRatio + " to " + ratio + ".";
 
 			ConfigServer.RatioMaxDurabilityLossToDurabilityGain = ratio;
 			sapi.World.Config.SetString(IdentityKey.Ratio, ratio);
-			sapi.StoreModConfig<GrindstonesConfigServer>(ConfigServer, configFile);
+			sapi.StoreModConfig(ConfigServer, configFile);
 			serverChannel.BroadcastPacket(new UpdateConfig()
 			{
 				Ratio = ratio,
@@ -217,13 +204,13 @@ namespace Grindstones
 
 		private TextCommandResult OnUpdateSafety(TextCommandCallingArgs args)
 		{
-			bool previoussafety = ConfigServer.SafeSharpening;
+			bool oldSafety = ConfigServer.SafeSharpening;
 			bool safety = (bool) args.LastArg;
-			string message = args.Caller.Player.PlayerName + " updated Grindstones repair safety from " + previoussafety + " to " + safety + ".";
+			string message = args.Caller.Player.PlayerName + " updated Grindstones repair safety from " + oldSafety + " to " + safety + ".";
 
 			ConfigServer.SafeSharpening = safety;
 			sapi.World.Config.SetBool(IdentityKey.Safe, safety);
-			sapi.StoreModConfig<GrindstonesConfigServer>(ConfigServer, configFile);
+			sapi.StoreModConfig(ConfigServer, configFile);
 			serverChannel.BroadcastPacket(new UpdateConfig()
 			{
 				Safe = safety,
@@ -238,7 +225,8 @@ namespace Grindstones
 
 			return TextCommandResult.Success();
 		}
-
+		
+		// TODO Combine similar functions into one
 		private TextCommandResult OnUpdateWhitelist(TextCommandCallingArgs args)
 		{
 			string action = args[0] as string;
@@ -282,7 +270,7 @@ namespace Grindstones
 			
 			string[] whitelist = ConfigServer.Whitelist.ToArray();
 			sapi.World.Config.SetString(IdentityKey.Whitelist, string.Join(",", whitelist));
-			sapi.StoreModConfig<GrindstonesConfigServer>(ConfigServer, configFile);
+			sapi.StoreModConfig(ConfigServer, configFile);
 			serverChannel.BroadcastPacket(new UpdateConfig(){
 				Whitelist = whitelist
 			});
@@ -335,7 +323,7 @@ namespace Grindstones
 			
 			string[] blacklist = ConfigServer.Blacklist.ToArray();
 			sapi.World.Config.SetString(IdentityKey.Blacklist, string.Join(",", blacklist));
-			sapi.StoreModConfig<GrindstonesConfigServer>(ConfigServer, configFile);
+			sapi.StoreModConfig(ConfigServer, configFile);
 			serverChannel.BroadcastPacket(new UpdateConfig(){
 				Blacklist = blacklist
 			});
@@ -379,7 +367,7 @@ namespace Grindstones
 		}
 		private void GetServerSettings(ICoreAPI api)
 		{
-			Logger.Event("Recieving config settings from server.");
+			Logger.Event("Receiving config settings from server.");
 			ConfigServer.RatioMaxDurabilityLossToDurabilityGain = api.World.Config.GetString(IdentityKey.Ratio, GrindstonesConfigServer.DefaultRepairRatio);
 			ConfigServer.SafeSharpening = api.World.Config.GetBool(IdentityKey.Safe, GrindstonesConfigServer.DefaultSafeSharpening);
 			ConfigServer.Whitelist = [..api.World.Config.GetString(IdentityKey.Whitelist, string.Join(",", GrindstonesConfigServer.DefaultWhitelist)).Split(",")];
@@ -438,9 +426,11 @@ namespace Grindstones
 		#endregion
 		
 
-		internal static string Domain = "grindstones";
+		private static string Domain = "grindstones";
 		private readonly string key = key;
 		public static implicit operator string(IdentityKey identityKey) => $"{Domain}.{identityKey.key}";
+		
+		public static void SetDomain (string domain) =>  Domain = domain;
 		
 		public int CompareTo(IdentityKey identityKey)
 		{
