@@ -17,6 +17,10 @@ namespace Grindstones
 		[JsonIgnore]
 		public const bool DefaultSafeSharpening = false;
 		[JsonIgnore]
+		public static readonly ImmutableHashSet<string> DefaultWhiteList = ImmutableHashSet<string>.Empty;
+		[JsonIgnore]
+		public static readonly ImmutableHashSet<string> DefaultBlackList = ImmutableHashSet<string>.Empty;
+		[JsonIgnore]
 		public static readonly ImmutableHashSet<string> DefaultDisallowedTools = [
 			"bow",
 			"sling",
@@ -40,11 +44,13 @@ namespace Grindstones
 		];
 		#endregion
 
-		public int ConfigVersion = 2;
+		public int ConfigVersion = 3;
 		[Obsolete("Version 1 config setting, use MaxDuabilityLoss and DurabilityGain instead.")]
 		public int DurabilityPointsRepairedPerPointLost = 4;
 		public string RatioMaxDurabilityLossToDurabilityGain = DefaultRepairRatio;
 		public bool SafeSharpening = DefaultSafeSharpening;
+		public HashSet<string> WhiteList = DefaultWhiteList.ToHashSet();
+		public HashSet<string> BlackList = DefaultBlackList.ToHashSet();
 		public HashSet<string> NotRepairableToolTypes = DefaultDisallowedTools.ToHashSet();
 		public HashSet<string> AllowedRepairableMaterials = DefaultAllowedMaterials.ToHashSet();
 
@@ -54,6 +60,16 @@ namespace Grindstones
 		[JsonIgnore]
 		public int DurabilityGain => TryParse(RatioMaxDurabilityLossToDurabilityGain.Split(":")[1], out var gain) ? gain : 4;
 
+		public bool IsWhitelisted(string tool)
+		{
+			return WhiteList.Contains(tool?.ToLower() ?? "unspecified");
+		}
+
+		public bool IsBlacklisted(string tool)
+		{
+			return BlackList.Contains(tool?.ToLower() ?? "unspecified");
+		}
+		
 		public bool IsRepairableTool (string tool)
 		{
 			return !NotRepairableToolTypes.Contains(tool?.ToLower() ?? "unspecified");
