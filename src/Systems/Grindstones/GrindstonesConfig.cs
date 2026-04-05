@@ -17,9 +17,9 @@ namespace Grindstones
 		[JsonIgnore]
 		public const bool DefaultSafeSharpening = false;
 		[JsonIgnore]
-		public static readonly ImmutableHashSet<string> DefaultWhiteList = ImmutableHashSet<string>.Empty;
+		public static readonly ImmutableHashSet<string> DefaultWhitelist = ImmutableHashSet<string>.Empty;
 		[JsonIgnore]
-		public static readonly ImmutableHashSet<string> DefaultBlackList = ImmutableHashSet<string>.Empty;
+		public static readonly ImmutableHashSet<string> DefaultBlacklist = ImmutableHashSet<string>.Empty;
 		[JsonIgnore]
 		public static readonly ImmutableHashSet<string> DefaultDisallowedTools = [
 			"bow",
@@ -49,25 +49,25 @@ namespace Grindstones
 		public int DurabilityPointsRepairedPerPointLost = 4;
 		public string RatioMaxDurabilityLossToDurabilityGain = DefaultRepairRatio;
 		public bool SafeSharpening = DefaultSafeSharpening;
-		public HashSet<string> WhiteList = DefaultWhiteList.ToHashSet();
-		public HashSet<string> BlackList = DefaultBlackList.ToHashSet();
+		public HashSet<string> Whitelist = DefaultWhitelist.ToHashSet();
+		public HashSet<string> Blacklist = DefaultBlacklist.ToHashSet();
 		public HashSet<string> NotRepairableToolTypes = DefaultDisallowedTools.ToHashSet();
 		public HashSet<string> AllowedRepairableMaterials = DefaultAllowedMaterials.ToHashSet();
 
 		[JsonIgnore]
-		public int MaxDurabilityLoss => TryParse(RatioMaxDurabilityLossToDurabilityGain.Split(":")[0], out var loss) ? loss : 1;
+		public int MaxDurabilityLoss => TryParse(RatioMaxDurabilityLossToDurabilityGain.Split(":")[0], out int loss) ? loss : 1;
 
 		[JsonIgnore]
-		public int DurabilityGain => TryParse(RatioMaxDurabilityLossToDurabilityGain.Split(":")[1], out var gain) ? gain : 4;
+		public int DurabilityGain => TryParse(RatioMaxDurabilityLossToDurabilityGain.Split(":")[1], out int gain) ? gain : 4;
 
 		public bool IsWhitelisted(string tool)
 		{
-			return WhiteList.Contains(tool?.ToLower() ?? "unspecified");
+			return Whitelist.Contains(tool?.ToLower() ?? "unspecified");
 		}
 
 		public bool IsBlacklisted(string tool)
 		{
-			return BlackList.Contains(tool?.ToLower() ?? "unspecified");
+			return Blacklist.Contains(tool?.ToLower() ?? "unspecified");
 		}
 		
 		public bool IsRepairableTool (string tool)
