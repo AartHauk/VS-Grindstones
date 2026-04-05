@@ -111,7 +111,7 @@ namespace Grindstones
 			{
 				if (!HasWheel)
 				{
-					var moved = slot.TryPutInto(world, inventory[0], 1);
+					int moved = slot.TryPutInto(world, inventory[0], 1);
 
 					Api.Logger.Audit("{0} Put 1x{1} from Grindstone at {2}.",
 						byPlayer.PlayerName,
@@ -388,9 +388,15 @@ namespace Grindstones
 		{
 			// Ensure this is an item
 			if (item is null) return false;
-
+			
 			// Ensure item is a tool
 			if (item.Tool is null) return false;
+			
+			// Check if item is Whitelisted
+			if (ModGrindstones.ConfigServer.IsWhitelisted(item.Code)) return true;
+			
+			// Check if item is Blacklisted
+			if (ModGrindstones.ConfigServer.IsBlacklisted(item.Code)) return false;
 
 			// Check if allowed tool type
 			if (!ModGrindstones.ConfigServer.IsRepairableTool(item.Tool?.ToString() ?? "")) return false;
@@ -401,8 +407,8 @@ namespace Grindstones
 			return true;
 		}
 
-		internal static Random rand = new Random();
-		internal static float randomStd(float mean = 0, float dev = 1)
+		private static Random rand = new Random();
+		private static float randomStd(float mean = 0, float dev = 1)
 		{
 			double u1 = 1 - rand.NextDouble();
 			double u2 = 1 - rand.NextDouble();
