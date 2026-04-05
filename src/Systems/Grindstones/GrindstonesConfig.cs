@@ -11,6 +11,9 @@ namespace Grindstones
 {
 	public class GrindstonesConfigServer
 	{
+		[JsonIgnore]
+		public const string Unspecified = "unspecified";
+		
 		#region Defaults
 		[JsonIgnore]
 		public const string DefaultRepairRatio = "1:4";
@@ -29,7 +32,7 @@ namespace Grindstones
 		];
 		[JsonIgnore]
 		public static readonly ImmutableHashSet<string> DefaultAllowedMaterials = [
-			"unspecified",
+			Unspecified,
 			"copper",
 			"tinbronze",
 			"bismuthbronze",
@@ -62,22 +65,22 @@ namespace Grindstones
 
 		public bool IsWhitelisted(string tool)
 		{
-			return Whitelist.Contains(tool?.ToLower() ?? "unspecified");
+			return Whitelist.Contains(tool?.ToLower() ?? Unspecified);
 		}
 
 		public bool IsBlacklisted(string tool)
 		{
-			return Blacklist.Contains(tool?.ToLower() ?? "unspecified");
+			return Blacklist.Contains(tool?.ToLower() ?? Unspecified);
 		}
 		
 		public bool IsRepairableTool (string tool)
 		{
-			return !NotRepairableToolTypes.Contains(tool?.ToLower() ?? "unspecified");
+			return !NotRepairableToolTypes.Contains(tool?.ToLower() ?? Unspecified);
 		}
 
 		public bool IsRepairableMaterial (string material)
 		{
-			return AllowedRepairableMaterials.Contains(material?.ToLower() ?? "unspecified");
+			return AllowedRepairableMaterials.Contains(material?.ToLower() ?? Unspecified);
 		}
 
 		public bool ShouldSerializeDurabilityPointsRepairedPerPointLost () { return false; }
