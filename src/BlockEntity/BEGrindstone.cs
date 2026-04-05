@@ -13,20 +13,17 @@ namespace Grindstones
 {
 	public class BlockEntityGrindstone : BlockEntityContainer
 	{
-		internal InventoryGrindstone inventory;
+		private readonly InventoryGrindstone inventory;
 		public override InventoryBase Inventory => inventory;
 		public override string InventoryClassName => ModGrindstones.ModID + ".begrindstone";
 
-		MeshData wheelMesh;
+		private MeshData wheelMesh;
 
 		GrindstoneRenderer renderer;
-		public bool IsSharpening = false;
-		ILoadedSound sharpeningSound;
+		private bool isSharpening = false;
+		private ILoadedSound sharpeningSound;
 
-		BlockEntityAnimationUtil animUtil
-		{
-			get { return GetBehavior<BEBehaviorAnimatable>()?.animUtil; }
-		}
+		private BlockEntityAnimationUtil AnimUtil => GetBehavior<BEBehaviorAnimatable>()?.animUtil;
 
 		public BlockEntityGrindstone()
 		{
@@ -38,7 +35,7 @@ namespace Grindstones
 		{
 			if (Api.Side == EnumAppSide.Client)
 			{
-				updateMeshesAndRenderer(Api as ICoreClientAPI);
+				UpdateMeshesAndRenderer(Api as ICoreClientAPI);
 			}
 		}
 
@@ -50,20 +47,17 @@ namespace Grindstones
 
 			if (api.Side == EnumAppSide.Client)
 			{
-				(api as ICoreClientAPI).Event.RegisterRenderer(renderer = new GrindstoneRenderer(Pos, api as  ICoreClientAPI, getRotation()), EnumRenderStage.Opaque, ModGrindstones.ModID + ".grindstonerenderer");
-				updateMeshesAndRenderer(api as ICoreClientAPI);
+				(api as ICoreClientAPI)?.Event.RegisterRenderer(renderer = new GrindstoneRenderer(Pos, api as  ICoreClientAPI, GetRotation()), EnumRenderStage.Opaque, ModGrindstones.ModID + ".grindstonerenderer");
+				UpdateMeshesAndRenderer(api as ICoreClientAPI);
 
-				if (sharpeningSound is null)
+				sharpeningSound ??= (api as ICoreClientAPI)?.World.LoadSound(new SoundParams()
 				{
-					sharpeningSound = (api as ICoreClientAPI).World.LoadSound(new SoundParams()
-					{
-						Location = new AssetLocation("grindstones:sounds/sharpening.ogg"),
-						Position = Pos.ToVec3f().Add(0.5f, 0.5f, 0.5f),
-						ShouldLoop = true,
-						DisposeOnFinish = false,
-						Volume = 1f,
-					});
-				}
+					Location = new AssetLocation("grindstones:sounds/sharpening.ogg"),
+					Position = Pos.ToVec3f().Add(0.5f, 0.5f, 0.5f),
+					ShouldLoop = true,
+					DisposeOnFinish = false,
+					Volume = 1f,
+				});
 			}
 
 			StopWheel();
@@ -80,46 +74,39 @@ namespace Grindstones
 			// Is the player's hands empty
 			if (slot.Empty)
 			{
-				if (HasWheel)
+				if (!HasWheel) return;
+				ItemStack stack = inventory[0].TakeOutWhole();
+				inventory[0].MarkDirty();
+
+				if (!byPlayer.InventoryManager.TryGiveItemstack(stack, true))
 				{
-
-					ItemStack stack = inventory[0].TakeOutWhole();
-					inventory[0].MarkDirty();
-
-					if (!byPlayer.InventoryManager.TryGiveItemstack(stack, true))
-					{
-						world.SpawnItemEntity(stack, Pos.ToVec3d().Add(0.5, 1, 0.5));
-					}
-
-					Api.Logger.Audit("{0} Took 1x{1} from Grindstone at {2}.",
-						byPlayer.PlayerName,
-						stack.Collectible.Code,
-						Pos
-					);
-
-					wheelMesh = null;
-					StopWheel();
-					MarkDirty(true);
+					world.SpawnItemEntity(stack, Pos.ToVec3d().Add(0.5, 1, 0.5));
 				}
+
+				Api.Logger.Audit("{0} Took 1x{1} from Grindstone at {2}.",
+					byPlayer.PlayerName,
+					stack.Collectible.Code,
+					Pos
+				);
+
+				wheelMesh = null;
+				StopWheel();
+				MarkDirty(true);
 				return;
 			}
 			
 			if (slot?.Itemstack?.Collectible == null) return;
 
 			// Is the player holding a grindstone
-			if (slot.Itemstack.Collectible.Code.FirstCodePart().StartsWith("grindingwheel"))
-			{
-				if (!HasWheel)
-				{
-					int moved = slot.TryPutInto(world, inventory[0], 1);
+			if (!slot.Itemstack.Collectible.Code.FirstCodePart().StartsWith("grindingwheel")) return;
+			if (HasWheel) return;
+			slot.TryPutInto(world, inventory[0], 1);
 
-					Api.Logger.Audit("{0} Put 1x{1} from Grindstone at {2}.",
-						byPlayer.PlayerName,
-						inventory[0].Itemstack.Collectible.Code,
-						Pos
-					);
-				}
-			}
+			Api.Logger.Audit("{0} Put 1x{1} from Grindstone at {2}.",
+				byPlayer.PlayerName,
+				inventory[0].Itemstack.Collectible.Code,
+				Pos
+			);
 		}
 
 		public bool OnInteractStep (IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
@@ -128,7 +115,7 @@ namespace Grindstones
 			// Make sure there is a grinding wheel before trying anything
 			if (!HasWheel)
 			{
-				if (IsSharpening)
+				if (isSharpening)
 				{
 					StopWheel();
 					MarkDirty(true);
@@ -141,7 +128,7 @@ namespace Grindstones
 			// Check if player is holding anything
 			if (activeSlot.Empty)
 			{
-				if (IsSharpening)
+				if (isSharpening)
 				{
 					StopWheel();
 					MarkDirty(true);
@@ -155,7 +142,7 @@ namespace Grindstones
 			// Check if item can be repaired
 			if (!IsRepairable(heldItem))
 			{
-				if (IsSharpening)
+				if (isSharpening)
 				{
 					StopWheel();
 					MarkDirty(true);
@@ -177,10 +164,10 @@ namespace Grindstones
 			{
 				nextDurability = nextMaxDurability;
 
-				// Stop reparing, we hit are preserving durability
+				// Stop repairing, we hit are preserving durability
 				if (ModGrindstones.ConfigServer.SafeSharpening)
 				{
-					if (IsSharpening)
+					if (isSharpening)
 					{
 						StopWheel();
 						MarkDirty(true);
@@ -192,7 +179,7 @@ namespace Grindstones
 			// Stop repairing, item is already at max durability
 			if (currentDurability >= currentMaxDurability)
 			{
-				if (IsSharpening)
+				if (isSharpening)
 				{
 					StopWheel();
 					MarkDirty(true);
@@ -201,7 +188,7 @@ namespace Grindstones
 			}
 
 			// Start animation becase we are doing work
-			if (!IsSharpening)
+			if (!isSharpening)
 			{
 				StartWheel();
 				MarkDirty(true);
@@ -222,21 +209,21 @@ namespace Grindstones
 
 		#region Wheel start/stop
 
-		long startLoadingMs;
+		private long startLoadingMs;
 
-		void StartWheel ()
+		private void StartWheel ()
 		{
-			IsSharpening = true;
+			isSharpening = true;
 
 			if (Api.Side != EnumAppSide.Client) return;
 
 			startLoadingMs = Api.World.ElapsedMilliseconds;
 
-			updateMeshesAndRenderer(Api as ICoreClientAPI);
+			UpdateMeshesAndRenderer(Api as ICoreClientAPI);
 			
 			if (sharpeningSound?.IsFadingOut == true || sharpeningSound?.IsPlaying == false)
 			{
-				sharpeningSound?.SetPitchOffset(randomStd(dev: 0.1f));
+				sharpeningSound?.SetPitchOffset(RandomStd(dev: 0.1f));
 				sharpeningSound?.Start();
 				sharpeningSound?.FadeIn(0.25f, null);
 			}
@@ -254,13 +241,13 @@ namespace Grindstones
 			*/
 		}
 
-		void StopWheel ()
+		private void StopWheel ()
 		{
-			IsSharpening = false;
+			isSharpening = false;
 
 			if (Api.Side != EnumAppSide.Client) return;
 
-			updateMeshesAndRenderer(Api as ICoreClientAPI);
+			UpdateMeshesAndRenderer(Api as ICoreClientAPI);
 
 			sharpeningSound?.FadeOutAndStop(0.25f);
 
@@ -272,27 +259,27 @@ namespace Grindstones
 
 		#region mesh stuff
 
-		private void updateMeshesAndRenderer(ICoreClientAPI capi)
+		private void UpdateMeshesAndRenderer(ICoreClientAPI capi)
 		{
 			if (HasWheel)
 			{
-				if (wheelMesh == null) wheelMesh = getOrCreateMesh(capi, "grindstones:grindingwheel" + inventory[0].Itemstack.Collectible.CodeEndWithoutParts(0) + "Mesh", (cp) => createWheelMesh(cp));
+				if (wheelMesh == null) wheelMesh = GetOrCreateMesh(capi, "grindstones:grindingwheel" + inventory[0].Itemstack.Collectible.CodeEndWithoutParts(0) + "Mesh", CreateWheelMesh);
 			}
 			else
 			{
 				wheelMesh = null;
 			}
 
-			renderer.UpdateMeshes(wheelMesh, IsSharpening);
+			renderer.UpdateMeshes(wheelMesh, isSharpening);
 		}
 
-		private MeshData createWheelMesh (ICoreClientAPI cp)
+		private MeshData CreateWheelMesh (ICoreClientAPI cp)
 		{
 			cp.Tesselator.TesselateItem(inventory[0].Itemstack.Item, out MeshData wheelMesh);
 			return wheelMesh;
 		}
 
-		int getRotation()
+		private int GetRotation()
 		{
 			Block block = Api.World.BlockAccessor.GetBlock(Pos);
 
@@ -308,7 +295,7 @@ namespace Grindstones
 			return rot;
 		}
 
-		MeshData getOrCreateMesh (ICoreClientAPI capi, string code, CreateMeshDelegate onCreate)
+		private MeshData GetOrCreateMesh (ICoreClientAPI capi, string code, CreateMeshDelegate onCreate)
 		{
 			if (!Api.ObjectCache.TryGetValue(code, out object obj))
 			{
@@ -328,11 +315,11 @@ namespace Grindstones
 		{
 			base.FromTreeAttributes(tree, worldForResolving);
 
-			IsSharpening = tree.GetBool("issharpening", false);
+			isSharpening = tree.GetBool("issharpening", false);
 
 			if (worldForResolving.Side == EnumAppSide.Client && this.Api != null)
 			{
-				if (IsSharpening && inventory[0]?.Itemstack != null) StartWheel();
+				if (isSharpening && inventory[0]?.Itemstack != null) StartWheel();
 				else StopWheel();
 
 				MarkDirty(true);
@@ -343,13 +330,10 @@ namespace Grindstones
 		{
 			base.ToTreeAttributes(tree);
 
-			tree.SetBool("issharpening", IsSharpening);
+			tree.SetBool("issharpening", isSharpening);
 		}
 
-		public bool HasWheel
-		{
-			get { return !inventory[0].Empty; }
-		}
+		public bool HasWheel => !inventory[0].Empty;
 
 		public override void OnBlockUnloaded ()
 		{
@@ -377,9 +361,9 @@ namespace Grindstones
 
 		public override bool OnTesselation (ITerrainMeshPool mesher, ITesselatorAPI tessThreadTesselator)
 		{
-			if (animUtil?.animator == null)
+			if (AnimUtil?.animator == null)
 			{
-				animUtil?.InitializeAnimator(ModGrindstones.ModID + ".grindstone", null, null, new Vec3f(0, getRotation(), 0));
+				AnimUtil?.InitializeAnimator(ModGrindstones.ModID + ".grindstone", null, null, new Vec3f(0, GetRotation(), 0));
 			}
 			return base.OnTesselation(mesher, tessThreadTesselator);
 		}
@@ -387,10 +371,8 @@ namespace Grindstones
 		private static bool IsRepairable (Item item)
 		{
 			// Ensure this is an item
-			if (item is null) return false;
-			
 			// Ensure item is a tool
-			if (item.Tool is null) return false;
+			if (item?.Tool is null) return false;
 			
 			// Check if item is Whitelisted
 			if (ModGrindstones.ConfigServer.IsWhitelisted(item.Code)) return true;
@@ -407,11 +389,11 @@ namespace Grindstones
 			return true;
 		}
 
-		private static Random rand = new Random();
-		private static float randomStd(float mean = 0, float dev = 1)
+		private static readonly Random Rand = new Random();
+		private static float RandomStd(float mean = 0, float dev = 1)
 		{
-			double u1 = 1 - rand.NextDouble();
-			double u2 = 1 - rand.NextDouble();
+			double u1 = 1 - Rand.NextDouble();
+			double u2 = 1 - Rand.NextDouble();
 			double randStdNormal = Math.Sqrt(-2.0 * Math.Log(u1)) * Math.Sin(2.0 * Math.PI * u2);
 			return (float) (mean + dev * randStdNormal);
 		}
