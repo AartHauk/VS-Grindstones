@@ -171,7 +171,7 @@ namespace Grindstones
 			sapi.StoreModConfig<GrindstonesConfigServer>(ConfigServer, configFile);
 			serverChannel.BroadcastPacket(new UpdateConfig()
 			{
-				ratio = ratio,
+				Ratio = ratio,
 			});
 
 			sapi.SendMessageToGroup(
@@ -195,7 +195,7 @@ namespace Grindstones
 			sapi.StoreModConfig<GrindstonesConfigServer>(ConfigServer, configFile);
 			serverChannel.BroadcastPacket(new UpdateConfig()
 			{
-				safe = safety,
+				Safe = safety,
 			});
 
 			sapi.SendMessageToGroup(
@@ -251,8 +251,8 @@ namespace Grindstones
 
 		private void OnConfigUpdated (UpdateConfig config)
 		{
-			ConfigServer.RatioMaxDurabilityLossToDurabilityGain = config.ratio;
-			ConfigServer.SafeSharpening = config.safe;
+			ConfigServer.RatioMaxDurabilityLossToDurabilityGain = config.Ratio;
+			ConfigServer.SafeSharpening = config.Safe;
 			ConfigServer.NotRepairableToolTypes = [..config.DisallowedTools];
 			ConfigServer.AllowedRepairableMaterials = [..config.AllowedMaterials];
 		}
@@ -270,10 +270,10 @@ namespace Grindstones
 	public class UpdateConfig
 	{
 		[ProtoMember(1)]
-		public string ratio = ModGrindstones.ConfigServer.RatioMaxDurabilityLossToDurabilityGain;
+		public string Ratio = ModGrindstones.ConfigServer.RatioMaxDurabilityLossToDurabilityGain;
 
 		[ProtoMember(2)]
-		public bool safe = ModGrindstones.ConfigServer.SafeSharpening;
+		public bool Safe = ModGrindstones.ConfigServer.SafeSharpening;
 
 		[ProtoMember(3)]
 		public string[] DisallowedTools = ModGrindstones.ConfigServer.NotRepairableToolTypes.ToArray();
