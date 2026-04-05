@@ -430,7 +430,7 @@ namespace Grindstones
 		private readonly string key = key;
 		public static implicit operator string(IdentityKey identityKey) => $"{Domain}.{identityKey.key}";
 		
-		public static void SetDomain (string domain) =>  Domain = domain;
+		internal static void SetDomain (string domain) => Domain = domain;
 		
 		public int CompareTo(IdentityKey identityKey)
 		{
