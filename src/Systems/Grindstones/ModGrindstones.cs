@@ -11,6 +11,7 @@ using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.Server;
+using Vintagestory.API.Util;
 using Vintagestory.Server;
 
 
@@ -31,15 +32,17 @@ namespace Grindstones
 
 		public ModGrindstones() :base()
 		{
-			if (Instance is null) Instance = this;
-			if (ConfigServer is null) ConfigServer = new GrindstonesConfigServer();
+			Instance ??= this;
+			ConfigServer ??= new GrindstonesConfigServer();
 		}
 
 		public override void StartPre (ICoreAPI api)
 		{
 			base.StartPre(api);
-			if (ModID is null) ModID = Mod.Info.ModID;
-			if (Logger is null) Logger = Mod.Logger;
+			ModID ??= Mod.Info.ModID;
+			Logger ??= Mod.Logger;
+
+			IdentityKey.Domain = ModID;
 		}
 
 		public override void Start (ICoreAPI api)
@@ -57,22 +60,23 @@ namespace Grindstones
 			api.RegisterBlockEntityClass(ModID + ".begrindstone", typeof(BlockEntityGrindstone));
 
 			
-			api.Network.RegisterChannel(ModID + ".NetworkChannel")
+			api.Network.RegisterChannel(IdentityKey.NetworkChannel)
 				.RegisterMessageType<UpdateConfig>();
 		}
 
 		#region Server
 		IServerNetworkChannel serverChannel;
 		ICoreServerAPI sapi;
-		public override void StartServerSide (ICoreServerAPI api)
+
+		public override void StartServerSide(ICoreServerAPI api)
 		{
 			Logger.Event("StartServerSide Called.");
 			base.StartServerSide(api);
 
 			TryLoadServerConfig(api);
-	
+
 			sapi = api;
-			serverChannel = api.Network.GetChannel(ModID + ".NetworkChannel");
+			serverChannel = api.Network.GetChannel(IdentityKey.NetworkChannel);
 
 			CreateServerCommands(api);
 		}
@@ -120,12 +124,12 @@ namespace Grindstones
 
 			ConfigServer = serverConfig;
 
-			api.World.Config.SetString(ModID + ".Ratio", serverConfig.RatioMaxDurabilityLossToDurabilityGain);
-			api.World.Config.SetBool(ModID + ".Safe", serverConfig.SafeSharpening);
-			api.World.Config.SetString(ModID + ".Whitelist", string.Join(",", serverConfig.WhiteList));
-			api.World.Config.SetString(ModID + ".Blacklist", string.Join(",", serverConfig.BlackList));
-			api.World.Config.SetString(ModID + ".ToolBlackList", string.Join(",", serverConfig.NotRepairableToolTypes));
-			api.World.Config.SetString(ModID + ".MaterialWhitelist", string.Join(",", serverConfig.AllowedRepairableMaterials));
+			api.World.Config.SetString(IdentityKey.Ratio, serverConfig.RatioMaxDurabilityLossToDurabilityGain);
+			api.World.Config.SetBool(IdentityKey.Safe, serverConfig.SafeSharpening);
+			api.World.Config.SetString(IdentityKey.Whitelist, string.Join(",", serverConfig.Whitelist));
+			api.World.Config.SetString(IdentityKey.Blacklist, string.Join(",", serverConfig.Blacklist));
+			api.World.Config.SetString(IdentityKey.DisallowedTools, string.Join(",", serverConfig.NotRepairableToolTypes));
+			api.World.Config.SetString(IdentityKey.AllowedMaterials, string.Join(",", serverConfig.AllowedRepairableMaterials));
 		}
 
 		// TODO Add the ability to change settings on the fly
@@ -140,9 +144,19 @@ namespace Grindstones
 					.HandleWith(OnUpdateRatio)
 					.EndSubCommand()
 				.BeginSubCommand("safety")
-					.WithDescription("Change the state of the Safe Shapening setting.")
+					.WithDescription("Change the state of the Safe Sharpening setting.")
 					.WithArgs(new BoolArgParser("safety", "safety", true))
 					.HandleWith(OnUpdateSafety)
+					.EndSubCommand()
+				.BeginSubCommand("whitelist")
+					.WithDescription("Add/Remove item from Grindstone whitelist.")
+					.WithArgs([new WordArgParser("action", true, ["add", "remove"]), new StringArgParser("item", false)])
+					.HandleWith(OnUpdateWhitelist)
+					.EndSubCommand()
+				.BeginSubCommand("blacklist")
+					.WithDescription("Add/Remove item from Grindstone blacklist.")
+					.WithArgs([new WordArgParser("action", true, ["add", "remove"]), new StringArgParser("item", false)])
+					.HandleWith(OnUpdateWhitelist)
 					.EndSubCommand()
 				.Validate();
 
@@ -154,7 +168,7 @@ namespace Grindstones
 					.HandleWith((args) =>
 					{
 						string message = "Current ratio in config: " + ConfigServer.RatioMaxDurabilityLossToDurabilityGain
-									  +"\nCurrent ratio in world : " + api.World.Config.GetAsString(ModID + ".Ratio");
+									  +"\nCurrent ratio in world : " + api.World.Config.GetAsString(IdentityKey.Ratio);
 						sapi.SendMessage(
 							args.Caller.Player,
 							GlobalConstants.InfoLogChatGroup,
@@ -163,6 +177,16 @@ namespace Grindstones
 						);
 						return TextCommandResult.Success();
 					})
+					.EndSubCommand()
+				.BeginSubCommand("whitelist")
+					.WithDescription("View the current specific item whitelist.")
+					.HandleWith((args) => TextCommandResult.Success($"Current whitelist in config: {string.Join(",", ConfigServer.Whitelist)}" +
+					                                                $"\nCurrent whitelist in world: {api.World.Config.GetAsString(IdentityKey.Whitelist)}"))
+					.EndSubCommand()
+				.BeginSubCommand("blacklist")
+					.WithDescription("View the current specific item blacklist.")
+					.HandleWith((args) => TextCommandResult.Success($"Current blacklist in config: {string.Join(",", ConfigServer.Blacklist)}" +
+					                                                $"\nCurrent blacklist in world: {api.World.Config.GetAsString(IdentityKey.Blacklist)}"))
 					.EndSubCommand()
 				.Validate();
 		}
@@ -174,7 +198,7 @@ namespace Grindstones
 			string message = args.Caller.Player.PlayerName + " updated Grindstones repair ratio from " + previousratio + " to " + ratio + ".";
 
 			ConfigServer.RatioMaxDurabilityLossToDurabilityGain = ratio;
-			sapi.World.Config.SetString(ModID + ".Ratio", ratio);
+			sapi.World.Config.SetString(IdentityKey.Ratio, ratio);
 			sapi.StoreModConfig<GrindstonesConfigServer>(ConfigServer, configFile);
 			serverChannel.BroadcastPacket(new UpdateConfig()
 			{
@@ -195,10 +219,10 @@ namespace Grindstones
 		{
 			bool previoussafety = ConfigServer.SafeSharpening;
 			bool safety = (bool) args.LastArg;
-			string message = args.Caller.Player.PlayerName + " updated Grindstones repair saftey from " + previoussafety + " to " + safety + ".";
+			string message = args.Caller.Player.PlayerName + " updated Grindstones repair safety from " + previoussafety + " to " + safety + ".";
 
 			ConfigServer.SafeSharpening = safety;
-			sapi.World.Config.SetBool(ModID + ".Safe", safety);
+			sapi.World.Config.SetBool(IdentityKey.Safe, safety);
 			sapi.StoreModConfig<GrindstonesConfigServer>(ConfigServer, configFile);
 			serverChannel.BroadcastPacket(new UpdateConfig()
 			{
@@ -214,6 +238,112 @@ namespace Grindstones
 
 			return TextCommandResult.Success();
 		}
+
+		private TextCommandResult OnUpdateWhitelist(TextCommandCallingArgs args)
+		{
+			string action = args[0] as string;
+			string tool = args[1] as string;
+
+			if (tool is null)
+			{
+				ItemSlot itemSlot = args.Caller.Player.InventoryManager.ActiveHotbarSlot;
+				if (itemSlot.Empty)
+				{
+					return TextCommandResult.Error("No tool specified or held!");
+				}
+
+				if (itemSlot.Itemstack.Item.Tool is null)
+				{
+					return TextCommandResult.Error($"{itemSlot.Itemstack.Item.Code} is not a tool!");
+				}
+				
+				tool = itemSlot.Itemstack.Item.Code;
+			}
+			else if (sapi.World.GetItem(tool).Tool is null)
+			{
+				return TextCommandResult.Error($"'{tool}' is not a tool!");
+			}
+
+			string message;
+			
+			switch (action)
+			{
+				case "add":
+					ConfigServer.Whitelist.Add(tool);
+					message = $"{args.Caller.Player.PlayerName} added '{tool}' to whitelist.";
+					break;
+				case "remove":
+					ConfigServer.Whitelist.Remove(tool);
+					message = $"{args.Caller.Player.PlayerName} removed '{tool}' from whitelist.";
+					break;
+				default:
+					return TextCommandResult.Error($"Unknown action '{action}'.");
+			}
+			
+			string[] whitelist = ConfigServer.Whitelist.ToArray();
+			sapi.World.Config.SetString(IdentityKey.Whitelist, string.Join(",", whitelist));
+			sapi.StoreModConfig<GrindstonesConfigServer>(ConfigServer, configFile);
+			serverChannel.BroadcastPacket(new UpdateConfig(){
+				Whitelist = whitelist
+			});
+			
+			Logger.Notification(message);
+			
+			return TextCommandResult.Success($"'{tool}' was successfully {(action == "add" ? "added to" : "removed from")} whitelist.");
+		}
+		
+		private TextCommandResult OnUpdateBlacklist(TextCommandCallingArgs args)
+		{
+			string action = args[0] as string;
+			string tool = args[1] as string;
+
+			if (tool is null)
+			{
+				ItemSlot itemSlot = args.Caller.Player.InventoryManager.ActiveHotbarSlot;
+				if (itemSlot.Empty)
+				{
+					return TextCommandResult.Error("No tool specified or held!");
+				}
+
+				if (itemSlot.Itemstack.Item.Tool is null)
+				{
+					return TextCommandResult.Error($"{itemSlot.Itemstack.Item.Code} is not a tool!");
+				}
+				
+				tool = itemSlot.Itemstack.Item.Code;
+			}
+			else if (sapi.World.GetItem(tool).Tool is null)
+			{
+				return TextCommandResult.Error($"'{tool}' is not a tool!");
+			}
+
+			string message;
+			
+			switch (action)
+			{
+				case "add":
+					ConfigServer.Blacklist.Add(tool);
+					message = $"{args.Caller.Player.PlayerName} added '{tool}' to blacklist.";
+					break;
+				case "remove":
+					ConfigServer.Blacklist.Remove(tool);
+					message = $"{args.Caller.Player.PlayerName} removed '{tool}' from blacklist.";
+					break;
+				default:
+					return TextCommandResult.Error($"Unknown action '{action}'.");
+			}
+			
+			string[] blacklist = ConfigServer.Blacklist.ToArray();
+			sapi.World.Config.SetString(IdentityKey.Blacklist, string.Join(",", blacklist));
+			sapi.StoreModConfig<GrindstonesConfigServer>(ConfigServer, configFile);
+			serverChannel.BroadcastPacket(new UpdateConfig(){
+				Blacklist = blacklist
+			});
+			
+			Logger.Notification(message);
+			
+			return TextCommandResult.Success($"'{tool}' was successfully {(action == "add" ? "added to" : "removed from")} blacklist.");
+		}
 		#endregion
 
 		#region Client
@@ -228,7 +358,7 @@ namespace Grindstones
 
 			capi = api;
 
-			clientChannel = api.Network.GetChannel(ModID + ".NetworkChannel")
+			clientChannel = api.Network.GetChannel(IdentityKey.NetworkChannel)
 				.SetMessageHandler<UpdateConfig>(OnConfigUpdated);
 
 			// TODO Rework this command to be better for client
@@ -240,7 +370,7 @@ namespace Grindstones
 					.HandleWith((args) =>
 					{
 						string message = "Current ratio in config: " + ConfigServer.RatioMaxDurabilityLossToDurabilityGain
-									  +"\nCurrent ratio in world : " + api.World.Config.GetAsString(ModID + ".Ratio");
+									  +"\nCurrent ratio in world : " + api.World.Config.GetAsString(IdentityKey.Ratio);
 						capi.SendChatMessage(message);
 						return TextCommandResult.Success();
 					})
@@ -250,20 +380,20 @@ namespace Grindstones
 		private void GetServerSettings(ICoreAPI api)
 		{
 			Logger.Event("Recieving config settings from server.");
-			ConfigServer.RatioMaxDurabilityLossToDurabilityGain = api.World.Config.GetString(ModID + ".Ratio", GrindstonesConfigServer.DefaultRepairRatio);
-			ConfigServer.SafeSharpening = api.World.Config.GetBool(ModID + ".Safe", GrindstonesConfigServer.DefaultSafeSharpening);
-			ConfigServer.WhiteList = [..api.World.Config.GetString(ModID + ".Whitelist", string.Join(",", GrindstonesConfigServer.DefaultWhiteList)).Split(",")];
-			ConfigServer.BlackList = [..api.World.Config.GetString(ModID + ".Blacklist", string.Join(",", GrindstonesConfigServer.DefaultBlackList)).Split(",")];
-			ConfigServer.NotRepairableToolTypes = [..api.World.Config.GetString(ModID + ".ToolBlackList", string.Join(",", GrindstonesConfigServer.DefaultDisallowedTools)).Split(",")];
-			ConfigServer.AllowedRepairableMaterials = [..api.World.Config.GetString(ModID + ".MaterialWhitelist", string.Join(",",GrindstonesConfigServer.DefaultAllowedMaterials)).Split(",")];
+			ConfigServer.RatioMaxDurabilityLossToDurabilityGain = api.World.Config.GetString(IdentityKey.Ratio, GrindstonesConfigServer.DefaultRepairRatio);
+			ConfigServer.SafeSharpening = api.World.Config.GetBool(IdentityKey.Safe, GrindstonesConfigServer.DefaultSafeSharpening);
+			ConfigServer.Whitelist = [..api.World.Config.GetString(IdentityKey.Whitelist, string.Join(",", GrindstonesConfigServer.DefaultWhitelist)).Split(",")];
+			ConfigServer.Blacklist = [..api.World.Config.GetString(IdentityKey.Blacklist, string.Join(",", GrindstonesConfigServer.DefaultBlacklist)).Split(",")];
+			ConfigServer.NotRepairableToolTypes = [..api.World.Config.GetString(IdentityKey.DisallowedTools, string.Join(",", GrindstonesConfigServer.DefaultDisallowedTools)).Split(",")];
+			ConfigServer.AllowedRepairableMaterials = [..api.World.Config.GetString(IdentityKey.AllowedMaterials, string.Join(",",GrindstonesConfigServer.DefaultAllowedMaterials)).Split(",")];
 		}
 
 		private void OnConfigUpdated (UpdateConfig config)
 		{
 			ConfigServer.RatioMaxDurabilityLossToDurabilityGain = config.Ratio;
 			ConfigServer.SafeSharpening = config.Safe;
-			ConfigServer.WhiteList = [..config.Whitelist];
-			ConfigServer.BlackList = [..config.Blacklist];
+			ConfigServer.Whitelist = [..config.Whitelist];
+			ConfigServer.Blacklist = [..config.Blacklist];
 			ConfigServer.NotRepairableToolTypes = [..config.DisallowedTools];
 			ConfigServer.AllowedRepairableMaterials = [..config.AllowedMaterials];
 		}
@@ -282,9 +412,39 @@ namespace Grindstones
 	{
 		[ProtoMember(1)] public string Ratio = ModGrindstones.ConfigServer.RatioMaxDurabilityLossToDurabilityGain;
 		[ProtoMember(2)] public bool Safe = ModGrindstones.ConfigServer.SafeSharpening;
-		[ProtoMember(3)] public string[] Whitelist = ModGrindstones.ConfigServer.WhiteList.ToArray();
-		[ProtoMember(4)] public string[] Blacklist = ModGrindstones.ConfigServer.BlackList.ToArray();
+		[ProtoMember(3)] public string[] Whitelist = ModGrindstones.ConfigServer.Whitelist.ToArray();
+		[ProtoMember(4)] public string[] Blacklist = ModGrindstones.ConfigServer.Blacklist.ToArray();
 		[ProtoMember(5)] public string[] DisallowedTools = ModGrindstones.ConfigServer.NotRepairableToolTypes.ToArray();
 		[ProtoMember(6)] public string[] AllowedMaterials = ModGrindstones.ConfigServer.AllowedRepairableMaterials.ToArray();
+	}
+
+	public class IdentityKey(string key) : IComparable<IdentityKey>
+	{
+		#region World Config Keys
+
+		public static readonly IdentityKey Ratio = new IdentityKey("Ratio");
+		public static readonly IdentityKey Safe = new IdentityKey("Safe");
+		public static readonly IdentityKey Whitelist = new IdentityKey("Whitelist");
+		public static readonly IdentityKey Blacklist = new IdentityKey("Blacklist");
+		public static readonly IdentityKey DisallowedTools = new IdentityKey("DisallowedTools");
+		public static readonly IdentityKey AllowedMaterials = new IdentityKey("AllowedMaterials");
+
+		#endregion
+
+		#region Network Keys
+
+		public static readonly IdentityKey NetworkChannel = new IdentityKey("NetworkChannel");
+
+		#endregion
+		
+
+		internal static string Domain = "grindstones";
+		private readonly string key = key;
+		public static implicit operator string(IdentityKey identityKey) => $"{Domain}.{identityKey.key}";
+		
+		public int CompareTo(IdentityKey identityKey)
+		{
+			return string.Compare($"{Domain}.{key}", $"{Domain}.{identityKey.key}", StringComparison.Ordinal);
+		}
 	}
 }
