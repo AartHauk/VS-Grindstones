@@ -5,12 +5,13 @@ using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Runtime.Serialization;
+using static System.Int32;
 
 namespace Grindstones
 {
 	public class GrindstonesConfigServer
 	{
-		#region defaults
+		#region Defaults
 		[JsonIgnore]
 		public const string DefaultRepairRatio = "1:4";
 		[JsonIgnore]
@@ -22,7 +23,6 @@ namespace Grindstones
 			"firearm",
 			"crossbow","shield"
 		];
-
 		[JsonIgnore]
 		public static readonly ImmutableHashSet<string> DefaultAllowedMaterials = [
 			"unspecified",
@@ -49,26 +49,10 @@ namespace Grindstones
 		public HashSet<string> AllowedRepairableMaterials = DefaultAllowedMaterials.ToHashSet();
 
 		[JsonIgnore]
-		public int MaxDurabilityLoss
-		{
-			get
-			{
-				int loss = 1;
-				Int32.TryParse(RatioMaxDurabilityLossToDurabilityGain.Split(":")[0], out loss);
-				return loss;
-			}
-		}
+		public int MaxDurabilityLoss => TryParse(RatioMaxDurabilityLossToDurabilityGain.Split(":")[0], out var loss) ? loss : 1;
 
 		[JsonIgnore]
-		public int DurabilityGain
-		{
-			get
-			{
-				int gain = 4;
-				Int32.TryParse(RatioMaxDurabilityLossToDurabilityGain.Split(":")[1], out gain);
-				return gain;
-			}
-		}
+		public int DurabilityGain => TryParse(RatioMaxDurabilityLossToDurabilityGain.Split(":")[1], out var gain) ? gain : 4;
 
 		public bool IsRepairableTool (string tool)
 		{
@@ -85,15 +69,8 @@ namespace Grindstones
 		[OnDeserialized]
 		internal void OnDeserialized (StreamingContext context)
 		{
-			NotRepairableToolTypes = [..NotRepairableToolTypes.Select((str) =>
-			{
-				return str.ToLower();
-			})];
-
-			AllowedRepairableMaterials = [..AllowedRepairableMaterials.Select((str) =>
-			{
-				return str.ToLower();
-			})];
+			NotRepairableToolTypes = [..NotRepairableToolTypes.Select((str) => str.ToLower())];
+			AllowedRepairableMaterials = [..AllowedRepairableMaterials.Select((str) => str.ToLower())];
 		}
 	}
 }
