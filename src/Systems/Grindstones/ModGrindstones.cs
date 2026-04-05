@@ -95,12 +95,17 @@ namespace Grindstones
 
 				if (serverConfig.ConfigVersion == 1)
 				{
-					Logger.Warning("Version 1 of confing found, updating config.");
+					Logger.Warning("Version 1 of config found, updating config.");
 					#pragma warning disable  // Ignore obsolete warning
 					int gain = serverConfig.DurabilityPointsRepairedPerPointLost;
 					#pragma warning restore
 					serverConfig.RatioMaxDurabilityLossToDurabilityGain = "1:" + gain;
 					serverConfig.ConfigVersion = 2;
+				}
+
+				if (serverConfig.ConfigVersion == 2)
+				{Logger.Warning("Version 2 of config found, updating config.");
+					serverConfig.ConfigVersion = 3;
 				}
 
 				api.StoreModConfig<GrindstonesConfigServer>(serverConfig, configFile);
@@ -117,6 +122,8 @@ namespace Grindstones
 
 			api.World.Config.SetString(ModID + ".Ratio", serverConfig.RatioMaxDurabilityLossToDurabilityGain);
 			api.World.Config.SetBool(ModID + ".Safe", serverConfig.SafeSharpening);
+			api.World.Config.SetString(ModID + ".Whitelist", string.Join(",", serverConfig.WhiteList));
+			api.World.Config.SetString(ModID + ".Blacklist", string.Join(",", serverConfig.BlackList));
 			api.World.Config.SetString(ModID + ".ToolBlackList", string.Join(",", serverConfig.NotRepairableToolTypes));
 			api.World.Config.SetString(ModID + ".MaterialWhitelist", string.Join(",", serverConfig.AllowedRepairableMaterials));
 		}
@@ -245,6 +252,8 @@ namespace Grindstones
 			Logger.Event("Recieving config settings from server.");
 			ConfigServer.RatioMaxDurabilityLossToDurabilityGain = api.World.Config.GetString(ModID + ".Ratio", GrindstonesConfigServer.DefaultRepairRatio);
 			ConfigServer.SafeSharpening = api.World.Config.GetBool(ModID + ".Safe", GrindstonesConfigServer.DefaultSafeSharpening);
+			ConfigServer.WhiteList = [..api.World.Config.GetString(ModID + ".Whitelist", string.Join(",", GrindstonesConfigServer.DefaultWhiteList)).Split(",")];
+			ConfigServer.BlackList = [..api.World.Config.GetString(ModID + ".Blacklist", string.Join(",", GrindstonesConfigServer.DefaultBlackList)).Split(",")];
 			ConfigServer.NotRepairableToolTypes = [..api.World.Config.GetString(ModID + ".ToolBlackList", string.Join(",", GrindstonesConfigServer.DefaultDisallowedTools)).Split(",")];
 			ConfigServer.AllowedRepairableMaterials = [..api.World.Config.GetString(ModID + ".MaterialWhitelist", string.Join(",",GrindstonesConfigServer.DefaultAllowedMaterials)).Split(",")];
 		}
@@ -253,6 +262,8 @@ namespace Grindstones
 		{
 			ConfigServer.RatioMaxDurabilityLossToDurabilityGain = config.Ratio;
 			ConfigServer.SafeSharpening = config.Safe;
+			ConfigServer.WhiteList = [..config.Whitelist];
+			ConfigServer.BlackList = [..config.Blacklist];
 			ConfigServer.NotRepairableToolTypes = [..config.DisallowedTools];
 			ConfigServer.AllowedRepairableMaterials = [..config.AllowedMaterials];
 		}
@@ -269,16 +280,11 @@ namespace Grindstones
 	[ProtoContract]
 	public class UpdateConfig
 	{
-		[ProtoMember(1)]
-		public string Ratio = ModGrindstones.ConfigServer.RatioMaxDurabilityLossToDurabilityGain;
-
-		[ProtoMember(2)]
-		public bool Safe = ModGrindstones.ConfigServer.SafeSharpening;
-
-		[ProtoMember(3)]
-		public string[] DisallowedTools = ModGrindstones.ConfigServer.NotRepairableToolTypes.ToArray();
-		
-		[ProtoMember(4)]
-		public string[] AllowedMaterials = ModGrindstones.ConfigServer.AllowedRepairableMaterials.ToArray();
+		[ProtoMember(1)] public string Ratio = ModGrindstones.ConfigServer.RatioMaxDurabilityLossToDurabilityGain;
+		[ProtoMember(2)] public bool Safe = ModGrindstones.ConfigServer.SafeSharpening;
+		[ProtoMember(3)] public string[] Whitelist = ModGrindstones.ConfigServer.WhiteList.ToArray();
+		[ProtoMember(4)] public string[] Blacklist = ModGrindstones.ConfigServer.BlackList.ToArray();
+		[ProtoMember(5)] public string[] DisallowedTools = ModGrindstones.ConfigServer.NotRepairableToolTypes.ToArray();
+		[ProtoMember(6)] public string[] AllowedMaterials = ModGrindstones.ConfigServer.AllowedRepairableMaterials.ToArray();
 	}
 }
