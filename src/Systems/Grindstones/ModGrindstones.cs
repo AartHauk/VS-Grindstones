@@ -409,16 +409,15 @@ namespace Grindstones
 	public class IdentityKey(string key) : IComparable<IdentityKey>
 	{
 		#region World Config Keys
-
+		
 		public static readonly IdentityKey Ratio = new IdentityKey("Ratio");
 		public static readonly IdentityKey Safe = new IdentityKey("Safe");
 		public static readonly IdentityKey Whitelist = new IdentityKey("Whitelist");
 		public static readonly IdentityKey Blacklist = new IdentityKey("Blacklist");
 		public static readonly IdentityKey DisallowedTools = new IdentityKey("DisallowedTools");
 		public static readonly IdentityKey AllowedMaterials = new IdentityKey("AllowedMaterials");
-
+		
 		#endregion
-
 		#region Network Keys
 
 		public static readonly IdentityKey NetworkChannel = new IdentityKey("NetworkChannel");
