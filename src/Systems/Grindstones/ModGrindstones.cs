@@ -14,11 +14,11 @@ namespace Grindstones
 {
 	public class ModGrindstones : ModSystem
 	{
-		public static string ModID;
-		public static ILogger Logger;
-		public static GrindstonesConfigServer ConfigServer;
+		public static string ModID { get; private set; }
+		public static ILogger Logger { get; private set; }
+		public static GrindstonesConfigServer ConfigServer { get; private set; }
 
-		private static Harmony harmony;
+		private static Harmony Harmony;
 
 		public override double ExecuteOrder () => 0.3;
 
@@ -42,8 +42,8 @@ namespace Grindstones
 
 			base.Start(api);
 
-			harmony = new Harmony(ModID);
-			harmony.PatchAll();
+			Harmony = new Harmony(ModID);
+			Harmony.PatchAll();
 
 			api.RegisterItemClass(ModID + ".grindingwheel", typeof(ItemGrindingwheel));
 
@@ -56,8 +56,8 @@ namespace Grindstones
 		}
 
 		#region Server
-		IServerNetworkChannel serverChannel;
-		ICoreServerAPI sapi;
+		private IServerNetworkChannel serverChannel;
+		private ICoreServerAPI sapi;
 
 		public override void StartServerSide(ICoreServerAPI api)
 		{
@@ -72,16 +72,16 @@ namespace Grindstones
 			CreateServerCommands(api);
 		}
 
-		private readonly string configFile = "GrindstonesConfig.json";
+		private const string ConfigFile = "GrindstonesConfig.json";
 
-		private void TryLoadServerConfig (ICoreAPI api)
+		private static void TryLoadServerConfig (ICoreAPI api)
 		{
 			Logger.Notification("Loading Config.");
 
 			GrindstonesConfigServer serverConfig;
 			try
 			{
-				serverConfig = api.LoadModConfig<GrindstonesConfigServer>(configFile) ?? new GrindstonesConfigServer();
+				serverConfig = api.LoadModConfig<GrindstonesConfigServer>(ConfigFile) ?? new GrindstonesConfigServer();
 
 				if (serverConfig.ConfigVersion == 1)
 				{
@@ -98,7 +98,7 @@ namespace Grindstones
 					serverConfig.ConfigVersion = 3;
 				}
 
-				api.StoreModConfig(serverConfig, configFile);
+				api.StoreModConfig(serverConfig, ConfigFile);
 			}
 			catch (Exception e)
 			{
@@ -167,12 +167,12 @@ namespace Grindstones
 					.EndSubCommand()
 				.BeginSubCommand("whitelist")
 					.WithDescription("View the current specific item whitelist.")
-					.HandleWith((args) => TextCommandResult.Success($"Current whitelist in config: {string.Join(",", ConfigServer.Whitelist)}" +
+					.HandleWith((_) => TextCommandResult.Success($"Current whitelist in config: {string.Join(",", ConfigServer.Whitelist)}" +
 					                                                $"\nCurrent whitelist in world: {api.World.Config.GetAsString(IdentityKey.Whitelist)}"))
 					.EndSubCommand()
 				.BeginSubCommand("blacklist")
 					.WithDescription("View the current specific item blacklist.")
-					.HandleWith((args) => TextCommandResult.Success($"Current blacklist in config: {string.Join(",", ConfigServer.Blacklist)}" +
+					.HandleWith((_) => TextCommandResult.Success($"Current blacklist in config: {string.Join(",", ConfigServer.Blacklist)}" +
 					                                                $"\nCurrent blacklist in world: {api.World.Config.GetAsString(IdentityKey.Blacklist)}"))
 					.EndSubCommand()
 				.Validate();
@@ -181,12 +181,12 @@ namespace Grindstones
 		private TextCommandResult OnUpdateRatio(TextCommandCallingArgs args)
 		{
 			string oldRatio = ConfigServer.RatioMaxDurabilityLossToDurabilityGain;
-			string ratio = args.LastArg as string;
+			string ratio = args.LastArg as string ?? oldRatio;
 			string message = args.Caller.Player.PlayerName + " updated Grindstones repair ratio from " + oldRatio + " to " + ratio + ".";
 
 			ConfigServer.RatioMaxDurabilityLossToDurabilityGain = ratio;
 			sapi.World.Config.SetString(IdentityKey.Ratio, ratio);
-			sapi.StoreModConfig(ConfigServer, configFile);
+			sapi.StoreModConfig(ConfigServer, ConfigFile);
 			serverChannel.BroadcastPacket(new UpdateConfig()
 			{
 				Ratio = ratio,
@@ -210,7 +210,7 @@ namespace Grindstones
 
 			ConfigServer.SafeSharpening = safety;
 			sapi.World.Config.SetBool(IdentityKey.Safe, safety);
-			sapi.StoreModConfig(ConfigServer, configFile);
+			sapi.StoreModConfig(ConfigServer, ConfigFile);
 			serverChannel.BroadcastPacket(new UpdateConfig()
 			{
 				Safe = safety,
@@ -270,7 +270,7 @@ namespace Grindstones
 			
 			string[] whitelist = ConfigServer.Whitelist.ToArray();
 			sapi.World.Config.SetString(IdentityKey.Whitelist, string.Join(",", whitelist));
-			sapi.StoreModConfig(ConfigServer, configFile);
+			sapi.StoreModConfig(ConfigServer, ConfigFile);
 			serverChannel.BroadcastPacket(new UpdateConfig(){
 				Whitelist = whitelist
 			});
@@ -323,7 +323,7 @@ namespace Grindstones
 			
 			string[] blacklist = ConfigServer.Blacklist.ToArray();
 			sapi.World.Config.SetString(IdentityKey.Blacklist, string.Join(",", blacklist));
-			sapi.StoreModConfig(ConfigServer, configFile);
+			sapi.StoreModConfig(ConfigServer, ConfigFile);
 			serverChannel.BroadcastPacket(new UpdateConfig(){
 				Blacklist = blacklist
 			});
@@ -355,7 +355,7 @@ namespace Grindstones
 				.RequiresPrivilege(Privilege.controlserver)
 				.BeginSubCommand("cratio")
 					.WithDescription("View the currently set ratio of MaxLoss to Gain.")
-					.HandleWith((args) =>
+					.HandleWith((_) =>
 					{
 						string message = "Current ratio in config: " + ConfigServer.RatioMaxDurabilityLossToDurabilityGain
 									  +"\nCurrent ratio in world : " + api.World.Config.GetAsString(IdentityKey.Ratio);
@@ -391,7 +391,7 @@ namespace Grindstones
 		{
 			Logger.Event("Dispose Called.");
 			base.Dispose();
-			harmony?.UnpatchAll(ModID);
+			Harmony?.UnpatchAll(ModID);
 		}
 	}
 
