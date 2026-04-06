@@ -3,6 +3,8 @@ using ProtoBuf;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http.Headers;
+using System.Reflection.Metadata.Ecma335;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
@@ -336,24 +338,56 @@ namespace Grindstones
 
 		private TextCommandResult OnUpdateSet(TextCommandCallingArgs args)
 		{
+			string[] toolSettings = { "whitelist", "blacklist" };
+
 			string setting = args[0] as string;
 			string action = args[1] as string;
 			string type  = args[2] as string;
+
+			string player = args.Caller.Player.PlayerName;
+			string set;
+			string message;
+
+			if (action != "toDefault")
+			{
+				switch (setting)
+				{
+					case "whitelist":
+					case "blacklist":
+						if (!validateTool(out type, args.Caller.Player.InventoryManager.ActiveHotbarSlot, type)) return TextCommandResult.Error(type);
+						break;
+
+					case "allowedMaterials":
+						if (type is null) return TextCommandResult.Error("You must supply a material type!");
+						type = type.ToLower();
+						break;
+
+					case "disallowedTools":
+						if (type is null) return TextCommandResult.Error("You must supply a valid tool type!");
+						if (!Enum.TryParse<EnumTool>(type, true, out _)) return TextCommandResult.Error("You must supply a valid tool type!");
+						type = type.ToLower();
+						break;
+				}
+			}
 
 			HashSet<string> config;
 			switch (setting)
 			{
 				case "whitelist":
 					config = ConfigServer.Whitelist;
+					set = "whitelist";
 					break;
 				case "blacklist":
 					config = ConfigServer.Blacklist;
+					set = "blacklist";
 					break;
 				case "allowedMaterials":
 					config = ConfigServer.AllowedRepairableMaterials;
+					set = "material whitelist";
 					break;
 				case "disallowedTools":
 					config = ConfigServer.NotRepairableToolTypes;
+					set = "tool blacklist";
 					break;
 				default:
 					return TextCommandResult.Error($"Unknown config setting '{setting}'.");
@@ -363,9 +397,11 @@ namespace Grindstones
 			{
 				case "add":
 					config.Add(type);
+					message = $"{player} added {type} to the {set}.";
 					break;
 				case "remove":
 					config.Remove(type);
+					message = $"{player} removed {type} from the {set}.";
 					break;
 				case "toDefault":
 					config = setting switch
@@ -376,6 +412,7 @@ namespace Grindstones
 						"disallowedTools" => GrindstonesConfigServer.DefaultDisallowedTools.ToHashSet(),
 						_ => config
 					};
+					message = $"{player} reset the {set} to default.";
 					break;
 				default:
 					return TextCommandResult.Error($"Unknown action '{action}'.");
@@ -400,8 +437,37 @@ namespace Grindstones
 			}
 			
 			serverChannel.BroadcastPacket(update);
+			Logger.Audit(message);
 			
-			return TextCommandResult.Success();
+			return TextCommandResult.Success(message);
+		}
+
+		private bool validateTool (out string tool, ItemSlot itemSlot, string type = null)
+		{
+			if (type is null)
+			{
+				if (itemSlot.Empty)
+				{
+					tool = "No tool specified or held!";
+					return false;
+				}
+
+				if (itemSlot.Itemstack.Item.Tool is null)
+				{
+					tool = $"{itemSlot.Itemstack.Item.Code} is not a tool!";
+					return false;
+				}
+				
+				tool = itemSlot.Itemstack.Item.Code;
+			}
+			else if (sapi.World.GetItem(type).Tool is null)
+			{
+				tool = $"'{type}' is not a tool!";
+				return false;
+			}
+
+			tool = type;
+			return true;
 		}
 		#endregion
 
