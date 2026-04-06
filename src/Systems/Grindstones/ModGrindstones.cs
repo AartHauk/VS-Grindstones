@@ -561,13 +561,15 @@ namespace Grindstones
 
 		#endregion
 		
-
 		private static string Domain = "grindstones";
 		private readonly string key = key;
-		public static implicit operator string(IdentityKey identityKey) => $"{Domain}.{identityKey.key}";
+
+		public static implicit operator string (IdentityKey identityKey) => identityKey.ToString();
 		
 		internal static void SetDomain (string domain) => Domain = domain;
 		
+		public override string ToString() => $"{Domain}.{this.key}";
+
 		public int CompareTo(IdentityKey identityKey)
 		{
 			return string.Compare($"{Domain}.{key}", $"{Domain}.{identityKey.key}", StringComparison.Ordinal);
