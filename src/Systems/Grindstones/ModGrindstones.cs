@@ -1,6 +1,7 @@
 ﻿using HarmonyLib;
 using ProtoBuf;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
@@ -331,6 +332,76 @@ namespace Grindstones
 			Logger.Notification(message);
 			
 			return TextCommandResult.Success($"'{tool}' was successfully {(action == "add" ? "added to" : "removed from")} blacklist.");
+		}
+
+		private TextCommandResult OnUpdateSet(TextCommandCallingArgs args)
+		{
+			string setting = args[0] as string;
+			string action = args[1] as string;
+			string type  = args[2] as string;
+
+			HashSet<string> config;
+			switch (setting)
+			{
+				case "whitelist":
+					config = ConfigServer.Whitelist;
+					break;
+				case "blacklist":
+					config = ConfigServer.Blacklist;
+					break;
+				case "allowedMaterials":
+					config = ConfigServer.AllowedRepairableMaterials;
+					break;
+				case "disallowedTools":
+					config = ConfigServer.NotRepairableToolTypes;
+					break;
+				default:
+					return TextCommandResult.Error($"Unknown config setting '{setting}'.");
+			}
+			
+			switch (action)
+			{
+				case "add":
+					config.Add(type);
+					break;
+				case "remove":
+					config.Remove(type);
+					break;
+				case "toDefault":
+					config = setting switch
+					{
+						"whitelist" => GrindstonesConfigServer.DefaultWhitelist.ToHashSet(),
+						"blacklist" => GrindstonesConfigServer.DefaultBlacklist.ToHashSet(),
+						"allowedMaterials" => GrindstonesConfigServer.DefaultAllowedMaterials.ToHashSet(),
+						"disallowedTools" => GrindstonesConfigServer.DefaultDisallowedTools.ToHashSet(),
+						_ => config
+					};
+					break;
+				default:
+					return TextCommandResult.Error($"Unknown action '{action}'.");
+			}
+
+			UpdateConfig update = new UpdateConfig();			
+			
+			switch (setting)
+			{
+				case "whitelist":
+					update.Whitelist = config.ToArray();
+					break;
+				case "blacklist":
+					update.Blacklist = config.ToArray();
+					break;
+				case "allowedMaterials":
+					update.AllowedMaterials = config.ToArray();
+					break;
+				case "disallowedTools":
+					update.DisallowedTools = config.ToArray();
+					break;
+			}
+			
+			serverChannel.BroadcastPacket(update);
+			
+			return TextCommandResult.Success();
 		}
 		#endregion
 
