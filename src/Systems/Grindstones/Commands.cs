@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Vintagestory;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
+using Vintagestory.API.Config;
 using Vintagestory.API.Server;
 
 namespace Grindstones
@@ -58,32 +59,32 @@ namespace Grindstones
 				.WithDescription("Change Grindstones mod config settings on the fly")
 				.RequiresPrivilege(Privilege.controlserver)
 				.BeginSubCommand("ratio")
-					.WithDescription("Change the ratio of MaxLoss to Gain.")
+					.WithDescription(Lang.Get("gconfig.desc.ratio"))
 					.WithArgs([new WordArgParser("action", true, [..ratioActions]), new StringArgParser("ratio", false)])
 					.HandleWith(OnUpdateRatio)
 					.EndSubCommand()
 				.BeginSubCommand("safety")
-					.WithDescription("Change the state of the Safe Sharpening setting.")
+					.WithDescription(Lang.Get("gconfig.desc.safety"))
 					.WithArgs([new WordArgParser("action", true, [..safteyActions]), new BoolArgParser("safety", "enable", false)])
 					.HandleWith(OnUpdateSafety)
 					.EndSubCommand()
 				.BeginSubCommand(settingWhitelist)
-					.WithDescription("Edit the current overriding whitelist.")
+					.WithDescription(Lang.Get("gconfig.desc.whitelist"))
 					.WithArgs([new WordArgParser("action", true, [..setActions]), new StringArgParser("type", false)])
 					.HandleWith(OnUpdateSet)
 					.EndSubCommand()
 				.BeginSubCommand(settingBlacklist)
-					.WithDescription("Edit the current overriding blacklist.")
+					.WithDescription(Lang.Get("gconfig.desc.blacklist"))
 					.WithArgs([new WordArgParser("action", true, [..setActions]), new StringArgParser("type", false)])
 					.HandleWith(OnUpdateSet)
 					.EndSubCommand()
 				.BeginSubCommand(settingAllowedMaterials)
-					.WithDescription("Edit the currently repairable materials.")
+					.WithDescription(Lang.Get("gconfig.desc.allowedMaterials"))
 					.WithArgs([new WordArgParser("action", true, [..setActions]), new StringArgParser("type", false)])
 					.HandleWith(OnUpdateSet)
 					.EndSubCommand()
 				.BeginSubCommand(settingDisallowedTools)
-					.WithDescription("Edit the currently disallowed tool types.")
+					.WithDescription(Lang.Get("gconfig.desc.disalloedTools"))
 					.WithArgs([new WordArgParser("action", true, [..setActions]), new StringArgParser("type", false)])
 					.HandleWith(OnUpdateSet)
 					.EndSubCommand()
@@ -94,16 +95,17 @@ namespace Grindstones
 		{
 			string action = ((string) args[0]).ToLower();
 
-			if (!ratioActions.Contains(action)) return TextCommandResult.Error($"Unknown action \"{action}\"");
+			if (!ratioActions.Contains(action)) return TextCommandResult.Error(Lang.Get("gconfig.error.unknownaction", action));
 
 			if (action == actionGet)
 			{
-				return TextCommandResult.Success($"Current ratio: {ConfigServer.RatioMaxDurabilityLossToDurabilityGain}");
+				return TextCommandResult.Success(Lang.Get("gconfig.message.getratio", ConfigServer.RatioMaxDurabilityLossToDurabilityGain));
 			}
 
 			string oldRatio = ConfigServer.RatioMaxDurabilityLossToDurabilityGain;
 			string ratio = (action == actionToDefault) ? GrindstonesConfigServer.DefaultRepairRatio : args[1] as string ?? oldRatio;
-			string message = args.Caller.Player.PlayerName + " updated Grindstones repair ratio from " + oldRatio + " to " + ratio + ".";
+			string player = args.Caller.Player.PlayerName;
+			string message = Lang.Get("gconfig.message.ratioupdate", player, oldRatio, ratio);
 
 			ConfigServer.RatioMaxDurabilityLossToDurabilityGain = ratio;
 			sapi.World.Config.SetString(IdentityKey.Ratio, ratio);
@@ -120,16 +122,17 @@ namespace Grindstones
 		private TextCommandResult OnUpdateSafety(TextCommandCallingArgs args)
 		{
 			string action = ((string) args[0]).ToLower();
-			if (!safteyActions.Contains(action)) return TextCommandResult.Error($"Unknown action \"{action}\"");
+			if (!safteyActions.Contains(action)) return TextCommandResult.Error(Lang.Get("gconfig.error.unknownaction", action));
 
 			if (action == actionGet)
 			{
-				return TextCommandResult.Success($"Safe sharpening is currently: {(ConfigServer.SafeSharpening ? "enabled" : "disabled")}");
+				return TextCommandResult.Success(Lang.Get("gconfig.message.getsafety", Lang.Get(ConfigServer.SafeSharpening ? "enabled" : "disabled")));
 			}
 
 			bool oldSafety = ConfigServer.SafeSharpening;
 			bool safety = (action == actionToDefault) ? GrindstonesConfigServer.DefaultSafeSharpening : (bool) args[1];
-			string message = args.Caller.Player.PlayerName + " updated Grindstones repair safety from " + oldSafety + " to " + safety + ".";
+			string player = args.Caller.Player.PlayerName;
+			string message = Lang.Get("gconfig.message.safetyupdate", player, oldSafety, safety);
 
 			ConfigServer.SafeSharpening = safety;
 			sapi.World.Config.SetBool(IdentityKey.Safe, safety);
@@ -149,7 +152,7 @@ namespace Grindstones
 			string action = ((string) args[0]).ToLower();
 			string value = "undefined";
 
-			if (!setActions.Contains(action)) return TextCommandResult.Error($"Unknown action \"{action}\"");
+			if (!setActions.Contains(action)) return TextCommandResult.Error(Lang.Get("gconfig.error.unknownaction", action));
 
 			string player = args.Caller.Player.PlayerName;
 			string set = "set undefined";
@@ -172,8 +175,6 @@ namespace Grindstones
 					case settingDisallowedTools:
 						if (!ValidateToolType(out value, currentHotbar, type)) return TextCommandResult.Error(type);
 						break;
-					default:
-						return TextCommandResult.Error($"Unknown config setting '{setting}'.");
 				}
 			}
 
@@ -181,33 +182,31 @@ namespace Grindstones
 			switch (setting)
 			{
 				case settingWhitelist:
-					set = "whitelist";
+					set = Lang.Get("whitelist");
 					break;
 				case settingBlacklist:
 					config = ref ConfigServer.Blacklist;
-					set = "blacklist";
+					set = Lang.Get("blacklist");
 					break;
 				case settingAllowedMaterials:
 					config = ref ConfigServer.AllowedRepairableMaterials;
-					set = "material whitelist";
+					set = Lang.Get("material whitelist");
 					break;
 				case settingDisallowedTools:
 					config = ref ConfigServer.NotRepairableToolTypes;
-					set = "tool blacklist";
+					set = Lang.Get("tool blacklist");
 					break;
-				default:
-					return TextCommandResult.Error($"Unknown config setting '{setting}'.");
 			}
 			
 			switch (action)
 			{
 				case actionAdd:
 					config.Add(value);
-					message = $"{player} added {value} to the {set}.";
+					message = Lang.Get("gconfig.message.setadd", player, value, set);
 					break;
 				case actionRemove:
 					config.Remove(value);
-					message = $"{player} removed {value} from the {set}.";
+					message = Lang.Get("gconfig.message.setremove", player, value, set);
 					break;
 				case actionToDefault:
 					config = setting switch
@@ -218,10 +217,10 @@ namespace Grindstones
 						settingDisallowedTools => GrindstonesConfigServer.DefaultDisallowedTools.ToHashSet(),
 						_ => config
 					};
-					message = $"{player} reset the {set} to default.";
+					message = Lang.Get("gconfig.message.setdefault", player, set);
 					break;
 				case actionGet:
-					return TextCommandResult.Success($"Current {set}: {string.Join(", ", config)}");
+					return TextCommandResult.Success(Lang.Get("gconfig.message.getset", set, string.Join(", ", config)));
 			}
 
 			UpdateConfig update = new UpdateConfig();			
@@ -255,13 +254,13 @@ namespace Grindstones
 			{
 				if (itemSlot.Empty)
 				{
-					tool = "No tool specified nor held!";
+					tool = Lang.Get("gconfig.error.notool");
 					return false;
 				}
 
 				if (itemSlot.Itemstack.Item?.Tool is null)
 				{
-					tool = $"{itemSlot.Itemstack.GetName()} is not a tool!";
+					tool = Lang.Get("gconfig.error.invalidtool", itemSlot.Itemstack.GetName());
 					return false;
 				}
 				
@@ -269,7 +268,7 @@ namespace Grindstones
 			}
 			else if (sapi.World.GetItem(type).Tool is null)
 			{
-				tool = $"'{type}' is not a tool!";
+				tool = Lang.Get("gconfig.error.invalidtool", type);
 				return false;
 			}
 
@@ -283,14 +282,14 @@ namespace Grindstones
 			{
 				if (itemSlot.Empty)
 				{
-					material = "No material specified nor tool held!";
+					material = Lang.Get("gconfig.error.nomaterial");
 					return false;
 				}
 
 				type = itemSlot.Itemstack.Item?.Variant["material"] ?? itemSlot.Itemstack.Item?.Variant["metal"] ?? null;
 				if (type is null)
 				{
-					material = "Tool does not have a specified material type!";
+					material = Lang.Get("gconfig.error.unspecifiedmaterial", itemSlot.Itemstack.GetName());
 					return false;
 				}
 			}
@@ -305,21 +304,21 @@ namespace Grindstones
 			{
 				if (itemSlot.Empty)
 				{
-					toolType = "No tool category specified nor tool held!";
+					toolType = Lang.Get("gconfig.error.notooltype");
 					return false;
 				}
 
 				type = itemSlot.Itemstack.Item.Tool?.ToString();
 				if (type is null)
 				{
-					toolType = $"{itemSlot.Itemstack.GetName()} is not a tool!";
+					toolType = Lang.Get("gconfig.error.invalidtool", itemSlot.Itemstack.GetName());
 					return false;
 				}
 			}
 			// Requires that all tools are registered with the vanilla enum tool type
 			else if (!Enum.TryParse<EnumTool>(type, true, out _))
 			{
-				toolType = $"{type} is not a valid tool type!";
+				toolType = Lang.Get("gconfig.error.invalidtooltype", type);
 				return false;
 			}
 
