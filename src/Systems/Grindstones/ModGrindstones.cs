@@ -1,14 +1,9 @@
 ﻿using HarmonyLib;
 using ProtoBuf;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http.Headers;
-using System.Reflection;
-using System.Reflection.Metadata.Ecma335;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
-using Vintagestory.API.Config;
 using Vintagestory.API.Server;
 
 
@@ -137,22 +132,6 @@ namespace Grindstones
 
 			clientChannel = api.Network.GetChannel(IdentityKey.NetworkChannel)
 				.SetMessageHandler<UpdateConfig>(OnConfigUpdated);
-
-			// TODO Rework this command to be better for client
-			api.ChatCommands.Create("GSettings")
-				.WithDescription("Gets the settings values for the Grindstones mod.")
-				.RequiresPrivilege(Privilege.controlserver)
-				.BeginSubCommand("cratio")
-					.WithDescription("View the currently set ratio of MaxLoss to Gain.")
-					.HandleWith((_) =>
-					{
-						string message = "Current ratio in config: " + ConfigServer.RatioMaxDurabilityLossToDurabilityGain
-									  +"\nCurrent ratio in world : " + api.World.Config.GetAsString(IdentityKey.Ratio);
-						capi.SendChatMessage(message);
-						return TextCommandResult.Success();
-					})
-					.EndSubCommand()
-				.Validate();
 		}
 		private void GetServerSettings(ICoreAPI api)
 		{
