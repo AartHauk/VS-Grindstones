@@ -19,29 +19,30 @@
 	"tool blacklist": "tool blacklist",
 
 	// Command tips and return messages
-	"gconfig.desc.ratio": "Change the ratio of MaxLoss to Gain.",
-	"gconfig.desc.safety": "Change the state of the Safe Sharpening setting.",
-	"gconfig.desc.whitelist": "Edit the current overriding whitelist.",
-	"gconfig.desc.blacklist": "Edit the current overriding blacklist.",
-	"gconfig.desc.allowedMaterials": "Edit the currently repairable materials.",
-	"gconfig.desc.disalloedTools": "Edit the currently disallowed tool types.",
+	"Change Grindstones mod config settings on the fly": "Change Grindstones mod config settings on the fly",
+	"Change the ratio of MaxLoss to Gain.": "Change the ratio of MaxLoss to Gain.",
+	"Change the state of the Safe Sharpening setting.": "Change the state of the Safe Sharpening setting.",
+	"Edit the current overriding whitelist.": "Edit the current overriding whitelist.",
+	"Edit the current overriding blacklist.": "Edit the current overriding blacklist.",
+	"Edit the currently repairable materials.": "Edit the currently repairable materials.",
+	"Edit the currently disallowed tool types.": "Edit the currently disallowed tool types.",
 
-	"gconfig.error.unknownaction": "Unknown action \"{0}\"!",
-	"gconfig.error.notool": "No tool specified nor held!",
-	"gconfig.error.invalidtool": "{0} is not a tool!",
-	"gconfig.error.nomaterial": "No material specified nor tool held!",
-	"gconfig.error.unspecifiedmaterial": "{0} does not have a specified material type!",
-	"gconfig.error.notooltype": "No tool category specified nor tool held!",
-	"gconfig.error.invalidtooltype": "{0} is not a vaild tool type!",
+	"Unknown action \"{0}\"!": "Unknown action \"{0}\"!",
+	"No tool specified nor held!": "No tool specified nor held!",
+	"{0} is not a tool!": "{0} is not a tool!",
+	"No material specified nor tool held!": "No material specified nor tool held!",
+	"{0} does not have a specified material type!": "{0} does not have a specified material type!",
+	"No tool category specified nor tool held!": "No tool category specified nor tool held!",
+	"{0} is not a vaild tool type!": "{0} is not a vaild tool type!",
 
-	"gconfig.message.getratio": "Current ratio: {0}",
-	"gconfig.message.ratioupdate": "{0} updated Grindstones repair ratio from {1} to {2}.",
+	"Current ratio: {0}": "Current ratio: {0}",
+	"{0} updated Grindstones repair ratio from {1} to {2}.": "{0} updated Grindstones repair ratio from {1} to {2}.",
 
-	"gconfig.message.getsafety": "Safe sharpening is currently: {0}",
-	"gconfig.message.safetyupdate": "{0} updated Grindstones repair safety from {1} to {2}.",
+	"Safe sharpening is currently: {0}": "Safe sharpening is currently: {0}",
+	"{0} updated Grindstones repair safety from {1} to {2}.": "{0} updated Grindstones repair safety from {1} to {2}.",
 
-	"gconfig.message.getset": "Current {0}: {1}",
-	"gconfig.message.setadd": "{0} added {1} to the {2}.",
-	"gconfig.message.setremove": "{0} removed {1} from the {2}.",
-	"gconfig.message.setdefault": "{0} reset the {1} to default."
+	"Current {0}: {1}": "Current {0}: {1}",
+	"{0} added {1} to the {2}.": "{0} added {1} to the {2}.",
+	"{0} removed {1} from the {2}.": "{0} removed {1} from the {2}.",
+	"{0} reset the {1} to default.": "{0} reset the {1} to default."
 }
