@@ -47,7 +47,6 @@ namespace Grindstones
 			CreateServerCommands(sapi);
 		}
 
-		// TODO Add the ability to change settings on the fly
 		// TODO Create helper class/method to generate commands
 		// TODO Allow for lang file translations
 		private void CreateServerCommands(ICoreAPI api)
