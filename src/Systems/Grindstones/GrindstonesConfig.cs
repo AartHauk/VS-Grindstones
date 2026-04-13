@@ -19,15 +19,16 @@ namespace Grindstones
 		[JsonIgnore]
 		public const bool DefaultSafeSharpening = false;
 		[JsonIgnore]
-		public static readonly ImmutableHashSet<string> DefaultWhitelist = ImmutableHashSet<string>.Empty;
+		public static readonly ImmutableHashSet<string> DefaultWhitelist = [];
 		[JsonIgnore]
-		public static readonly ImmutableHashSet<string> DefaultBlacklist = ImmutableHashSet<string>.Empty;
+		public static readonly ImmutableHashSet<string> DefaultBlacklist = [];
 		[JsonIgnore]
 		public static readonly ImmutableHashSet<string> DefaultDisallowedTools = [
 			"bow",
 			"sling",
 			"firearm",
-			"crossbow","shield"
+			"crossbow",
+			"shield"
 		];
 		[JsonIgnore]
 		public static readonly ImmutableHashSet<string> DefaultAllowedMaterials = [
