@@ -49,7 +49,6 @@ namespace Grindstones
 		}
 
 		// TODO Create helper class/method to generate commands
-		// TODO Allow for lang file translations
 		private void CreateServerCommands(ICoreAPI api)
 		{
 			CommandArgumentParsers parsers = api.ChatCommands.Parsers;
