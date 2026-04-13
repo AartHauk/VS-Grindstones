@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http.Headers;
+using System.Reflection;
 using System.Reflection.Metadata.Ecma335;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
@@ -72,10 +73,12 @@ namespace Grindstones
 			sapi = api;
 			serverChannel = api.Network.GetChannel(IdentityKey.NetworkChannel);
 
-			CreateServerCommands(api);
+			new Commands(api, serverChannel).RegisterServerCommands(api);
+
+			//CreateServerCommands(api);
 		}
 
-		private const string ConfigFile = "GrindstonesConfig.json";
+		internal const string ConfigFile = "GrindstonesConfig.json";
 
 		private static void TryLoadServerConfig (ICoreAPI api)
 		{
@@ -121,70 +124,92 @@ namespace Grindstones
 			api.World.Config.SetString(IdentityKey.AllowedMaterials, string.Join(",", serverConfig.AllowedRepairableMaterials));
 		}
 
-		// TODO Add the ability to change settings on the fly
-		// TODO Create helper class/method to generate commands
 		private void CreateServerCommands(ICoreAPI api)
 		{
+			CommandArgumentParsers parsers = api.ChatCommands.Parsers;
+
 			api.ChatCommands.Create("GConfig")
+				.WithAlias("GSettings")
 				.WithDescription("Change Grindstones mod config settings on the fly")
 				.RequiresPrivilege(Privilege.controlserver)
 				.BeginSubCommand("ratio")
 					.WithDescription("Change the ratio of MaxLoss to Gain.")
-					.WithArgs(new StringArgParser("ratio", true))
+					.WithArgs([new WordArgParser("action", true, ["set", "get"]), new StringArgParser("ratio", false)])
 					.HandleWith(OnUpdateRatio)
 					.EndSubCommand()
 				.BeginSubCommand("safety")
 					.WithDescription("Change the state of the Safe Sharpening setting.")
-					.WithArgs(new BoolArgParser("safety", "safety", true))
+					.WithArgs([new WordArgParser("action", true, ["set", "get"]), new BoolArgParser("safety", "enable", false)])
 					.HandleWith(OnUpdateSafety)
 					.EndSubCommand()
 				.BeginSubCommand("whitelist")
-					.WithDescription("Add/Remove item from Grindstone whitelist.")
-					.WithArgs([new WordArgParser("action", true, ["add", "remove"]), new StringArgParser("item", false)])
-					.HandleWith(OnUpdateWhitelist)
+					.WithDescription("Edit the current overriding whitelist.")
+					.WithArgs([new WordArgParser("action", true, ["add", "remove", "toDefault", "get"]), new StringArgParser("type", false)])
+					.HandleWith(OnUpdateSet)
 					.EndSubCommand()
 				.BeginSubCommand("blacklist")
-					.WithDescription("Add/Remove item from Grindstone blacklist.")
-					.WithArgs([new WordArgParser("action", true, ["add", "remove"]), new StringArgParser("item", false)])
-					.HandleWith(OnUpdateBlacklist)
+					.WithDescription("Edit the current overriding blacklist.")
+					.WithArgs([new WordArgParser("action", true, ["add", "remove", "toDefault", "get"]), new StringArgParser("type", false)])
+					.HandleWith(OnUpdateSet)
+					.EndSubCommand()
+				.BeginSubCommand("allowedMaterials")
+					.WithDescription("Edit the currently repairable materials.")
+					.WithArgs([new WordArgParser("action", true, ["add", "remove", "toDefault", "get"]), new StringArgParser("type", false)])
+					.HandleWith(OnUpdateSet)
+					.EndSubCommand()
+				.BeginSubCommand("disallowedTools")
+					.WithDescription("Edit the currently disallowed tool types.")
+					.WithArgs([new WordArgParser("action", true, ["add", "remove", "toDefault", "get"]), new StringArgParser("type", false)])
+					.HandleWith(OnUpdateSet)
 					.EndSubCommand()
 				.Validate();
 
-			api.ChatCommands.Create("GSettings")
-				.WithDescription("Gets the settings values for the Grindstones mod.")
-				.RequiresPrivilege(Privilege.controlserver)
-				.BeginSubCommand("ratio")
-					.WithDescription("View the currently set ratio of MaxLoss to Gain.")
-					.HandleWith((args) =>
-					{
-						string message = "Current ratio in config: " + ConfigServer.RatioMaxDurabilityLossToDurabilityGain
-									  +"\nCurrent ratio in world : " + api.World.Config.GetAsString(IdentityKey.Ratio);
-						sapi.SendMessage(
-							args.Caller.Player,
-							GlobalConstants.InfoLogChatGroup,
-							message,
-							EnumChatType.Notification
-						);
-						return TextCommandResult.Success();
-					})
-					.EndSubCommand()
-				.BeginSubCommand("whitelist")
-					.WithDescription("View the current specific item whitelist.")
-					.HandleWith((_) => TextCommandResult.Success($"Current whitelist in config: {string.Join(",", ConfigServer.Whitelist)}" +
-					                                                $"\nCurrent whitelist in world: {api.World.Config.GetAsString(IdentityKey.Whitelist)}"))
-					.EndSubCommand()
-				.BeginSubCommand("blacklist")
-					.WithDescription("View the current specific item blacklist.")
-					.HandleWith((_) => TextCommandResult.Success($"Current blacklist in config: {string.Join(",", ConfigServer.Blacklist)}" +
-					                                                $"\nCurrent blacklist in world: {api.World.Config.GetAsString(IdentityKey.Blacklist)}"))
-					.EndSubCommand()
-				.Validate();
+			 //api.ChatCommands.Create("GSettings")
+				//.WithDescription("Gets the settings values for the Grindstones mod.")
+				//.RequiresPrivilege(Privilege.controlserver)
+				//.BeginSubCommand("ratio")
+				//	.WithDescription("View the currently set ratio of MaxLoss to Gain.")
+				//	.HandleWith((args) =>
+				//	{
+				//		string message = "Current ratio in config: " + ConfigServer.RatioMaxDurabilityLossToDurabilityGain
+				//					  +"\nCurrent ratio in world : " + api.World.Config.GetAsString(IdentityKey.Ratio);
+				//		sapi.SendMessage(
+				//			args.Caller.Player,
+				//			GlobalConstants.InfoLogChatGroup,
+				//			message,
+				//			EnumChatType.Notification
+				//		);
+				//		return TextCommandResult.Success();
+				//	})
+				//	.EndSubCommand()
+				//.BeginSubCommand("whitelist")
+				//	.WithDescription("View the current specific item whitelist.")
+				//	.HandleWith((_) => TextCommandResult.Success($"Current whitelist in config: {string.Join(",", ConfigServer.Whitelist)}" +
+				//	                                                $"\nCurrent whitelist in world: {api.World.Config.GetAsString(IdentityKey.Whitelist)}"))
+				//	.EndSubCommand()
+				//.BeginSubCommand("blacklist")
+				//	.WithDescription("View the current specific item blacklist.")
+				//	.HandleWith((_) => TextCommandResult.Success($"Current blacklist in config: {string.Join(",", ConfigServer.Blacklist)}" +
+				//	                                                $"\nCurrent blacklist in world: {api.World.Config.GetAsString(IdentityKey.Blacklist)}"))
+				//	.EndSubCommand()
+				//.Validate();
 		}
 
 		private TextCommandResult OnUpdateRatio(TextCommandCallingArgs args)
 		{
+			string action = args[0] as string;
+
+			if (action == "get")
+			{
+				return TextCommandResult.Success($"Current ratio: {ConfigServer.RatioMaxDurabilityLossToDurabilityGain}");
+			}
+			else if (action != "set")
+			{
+				return TextCommandResult.Error($"Unknown action \"{action}\"");
+			}
+
 			string oldRatio = ConfigServer.RatioMaxDurabilityLossToDurabilityGain;
-			string ratio = args.LastArg as string ?? oldRatio;
+			string ratio = args[1] as string ?? oldRatio;
 			string message = args.Caller.Player.PlayerName + " updated Grindstones repair ratio from " + oldRatio + " to " + ratio + ".";
 
 			ConfigServer.RatioMaxDurabilityLossToDurabilityGain = ratio;
@@ -195,20 +220,25 @@ namespace Grindstones
 				Ratio = ratio,
 			});
 
-			sapi.SendMessageToGroup(
-				GlobalConstants.InfoLogChatGroup,
-				message,
-				EnumChatType.Notification
-			);
 			Logger.Notification(message);
-
-			return TextCommandResult.Success();
+			return TextCommandResult.Success(message);
 		}
 
 		private TextCommandResult OnUpdateSafety(TextCommandCallingArgs args)
 		{
+			string action = args[0] as string;
+
+			if (action == "get")
+			{
+				return TextCommandResult.Success($"Safe sharpening is currently: {(ConfigServer.SafeSharpening ? "enabled" : "disabled")}");
+			}
+			else if (action != "set")
+			{
+				return TextCommandResult.Error($"Unknown action \"{action}\"");
+			}
+
 			bool oldSafety = ConfigServer.SafeSharpening;
-			bool safety = (bool) args.LastArg;
+			bool safety = (bool) args[1];
 			string message = args.Caller.Player.PlayerName + " updated Grindstones repair safety from " + oldSafety + " to " + safety + ".";
 
 			ConfigServer.SafeSharpening = safety;
@@ -219,174 +249,55 @@ namespace Grindstones
 				Safe = safety,
 			});
 
-			sapi.SendMessageToGroup(
-				GlobalConstants.InfoLogChatGroup,
-				message,
-				EnumChatType.Notification
-			);
 			Logger.Notification(message);
-
-			return TextCommandResult.Success();
-		}
-		
-		// TODO Combine similar functions into one
-		private TextCommandResult OnUpdateWhitelist(TextCommandCallingArgs args)
-		{
-			string action = args[0] as string;
-			string tool = args[1] as string;
-
-			if (tool is null)
-			{
-				ItemSlot itemSlot = args.Caller.Player.InventoryManager.ActiveHotbarSlot;
-				if (itemSlot.Empty)
-				{
-					return TextCommandResult.Error("No tool specified or held!");
-				}
-
-				if (itemSlot.Itemstack.Item.Tool is null)
-				{
-					return TextCommandResult.Error($"{itemSlot.Itemstack.Item.Code} is not a tool!");
-				}
-				
-				tool = itemSlot.Itemstack.Item.Code;
-			}
-			else if (sapi.World.GetItem(tool).Tool is null)
-			{
-				return TextCommandResult.Error($"'{tool}' is not a tool!");
-			}
-
-			string message;
-			
-			switch (action)
-			{
-				case "add":
-					ConfigServer.Whitelist.Add(tool);
-					message = $"{args.Caller.Player.PlayerName} added '{tool}' to whitelist.";
-					break;
-				case "remove":
-					ConfigServer.Whitelist.Remove(tool);
-					message = $"{args.Caller.Player.PlayerName} removed '{tool}' from whitelist.";
-					break;
-				default:
-					return TextCommandResult.Error($"Unknown action '{action}'.");
-			}
-			
-			string[] whitelist = ConfigServer.Whitelist.ToArray();
-			sapi.World.Config.SetString(IdentityKey.Whitelist, string.Join(",", whitelist));
-			sapi.StoreModConfig(ConfigServer, ConfigFile);
-			serverChannel.BroadcastPacket(new UpdateConfig(){
-				Whitelist = whitelist
-			});
-			
-			Logger.Notification(message);
-			
-			return TextCommandResult.Success($"'{tool}' was successfully {(action == "add" ? "added to" : "removed from")} whitelist.");
-		}
-		
-		private TextCommandResult OnUpdateBlacklist(TextCommandCallingArgs args)
-		{
-			string action = args[0] as string;
-			string tool = args[1] as string;
-
-			if (tool is null)
-			{
-				ItemSlot itemSlot = args.Caller.Player.InventoryManager.ActiveHotbarSlot;
-				if (itemSlot.Empty)
-				{
-					return TextCommandResult.Error("No tool specified or held!");
-				}
-
-				if (itemSlot.Itemstack.Item.Tool is null)
-				{
-					return TextCommandResult.Error($"{itemSlot.Itemstack.Item.Code} is not a tool!");
-				}
-				
-				tool = itemSlot.Itemstack.Item.Code;
-			}
-			else if (sapi.World.GetItem(tool).Tool is null)
-			{
-				return TextCommandResult.Error($"'{tool}' is not a tool!");
-			}
-
-			string message;
-			
-			switch (action)
-			{
-				case "add":
-					ConfigServer.Blacklist.Add(tool);
-					message = $"{args.Caller.Player.PlayerName} added '{tool}' to blacklist.";
-					break;
-				case "remove":
-					ConfigServer.Blacklist.Remove(tool);
-					message = $"{args.Caller.Player.PlayerName} removed '{tool}' from blacklist.";
-					break;
-				default:
-					return TextCommandResult.Error($"Unknown action '{action}'.");
-			}
-			
-			string[] blacklist = ConfigServer.Blacklist.ToArray();
-			sapi.World.Config.SetString(IdentityKey.Blacklist, string.Join(",", blacklist));
-			sapi.StoreModConfig(ConfigServer, ConfigFile);
-			serverChannel.BroadcastPacket(new UpdateConfig(){
-				Blacklist = blacklist
-			});
-			
-			Logger.Notification(message);
-			
-			return TextCommandResult.Success($"'{tool}' was successfully {(action == "add" ? "added to" : "removed from")} blacklist.");
+			return TextCommandResult.Success(message);
 		}
 
 		private TextCommandResult OnUpdateSet(TextCommandCallingArgs args)
 		{
-			string[] toolSettings = { "whitelist", "blacklist" };
-
-			string setting = args[0] as string;
-			string action = args[1] as string;
-			string type  = args[2] as string;
+			string setting = args.SubCmdCode;
+			string action = (args[0] as string).ToLower();
+			string type = (args[1] as string)?.ToLower();
 
 			string player = args.Caller.Player.PlayerName;
 			string set;
 			string message;
 
-			if (action != "toDefault")
+			if (action != "toDefault" && action != "get")
 			{
+				ItemSlot currentHotbar = args.Caller.Player.InventoryManager.ActiveHotbarSlot;
+
 				switch (setting)
 				{
 					case "whitelist":
 					case "blacklist":
-						if (!validateTool(out type, args.Caller.Player.InventoryManager.ActiveHotbarSlot, type)) return TextCommandResult.Error(type);
+						if (!validateTool(out type, currentHotbar, type)) return TextCommandResult.Error(type);
 						break;
-
-					case "allowedMaterials":
-						if (type is null) return TextCommandResult.Error("You must supply a material type!");
-						type = type.ToLower();
+					case "allowedmaterials":
+						if (!validateMaterial(out type, currentHotbar, type)) return TextCommandResult.Error(type);
 						break;
-
-					case "disallowedTools":
-						if (type is null) return TextCommandResult.Error("You must supply a valid tool type!");
-						if (!Enum.TryParse<EnumTool>(type, true, out _)) return TextCommandResult.Error("You must supply a valid tool type!");
-						type = type.ToLower();
+					case "disallowedtools":
+						if (!validateToolType(out type, currentHotbar, type)) return TextCommandResult.Error(type);
 						break;
 				}
 			}
 
-			HashSet<string> config;
+			ref HashSet<string> config = ref ConfigServer.Whitelist;
 			switch (setting)
 			{
 				case "whitelist":
-					config = ConfigServer.Whitelist;
 					set = "whitelist";
 					break;
 				case "blacklist":
-					config = ConfigServer.Blacklist;
+					config = ref ConfigServer.Blacklist;
 					set = "blacklist";
 					break;
-				case "allowedMaterials":
-					config = ConfigServer.AllowedRepairableMaterials;
+				case "allowedmaterials":
+					config = ref ConfigServer.AllowedRepairableMaterials;
 					set = "material whitelist";
 					break;
-				case "disallowedTools":
-					config = ConfigServer.NotRepairableToolTypes;
+				case "disallowedtools":
+					config = ref ConfigServer.NotRepairableToolTypes;
 					set = "tool blacklist";
 					break;
 				default:
@@ -403,42 +314,48 @@ namespace Grindstones
 					config.Remove(type);
 					message = $"{player} removed {type} from the {set}.";
 					break;
-				case "toDefault":
+				case "todefault":
 					config = setting switch
 					{
 						"whitelist" => GrindstonesConfigServer.DefaultWhitelist.ToHashSet(),
 						"blacklist" => GrindstonesConfigServer.DefaultBlacklist.ToHashSet(),
-						"allowedMaterials" => GrindstonesConfigServer.DefaultAllowedMaterials.ToHashSet(),
-						"disallowedTools" => GrindstonesConfigServer.DefaultDisallowedTools.ToHashSet(),
+						"allowedmaterials" => GrindstonesConfigServer.DefaultAllowedMaterials.ToHashSet(),
+						"disallowedtools" => GrindstonesConfigServer.DefaultDisallowedTools.ToHashSet(),
 						_ => config
 					};
 					message = $"{player} reset the {set} to default.";
+					break;
+				case "get":
+					message = $"Current {set}: {string.Join(", ", config)}";
 					break;
 				default:
 					return TextCommandResult.Error($"Unknown action '{action}'.");
 			}
 
-			UpdateConfig update = new UpdateConfig();			
+			if (action != "get") {
+				UpdateConfig update = new UpdateConfig();			
 			
-			switch (setting)
-			{
-				case "whitelist":
-					update.Whitelist = config.ToArray();
-					break;
-				case "blacklist":
-					update.Blacklist = config.ToArray();
-					break;
-				case "allowedMaterials":
-					update.AllowedMaterials = config.ToArray();
-					break;
-				case "disallowedTools":
-					update.DisallowedTools = config.ToArray();
-					break;
+				switch (setting)
+				{
+					case "whitelist":
+						update.Whitelist = config.ToArray();
+						break;
+					case "blacklist":
+						update.Blacklist = config.ToArray();
+						break;
+					case "allowedmaterials":
+						update.AllowedMaterials = config.ToArray();
+						break;
+					case "disallowedtools":
+						update.DisallowedTools = config.ToArray();
+						break;
+				}
+
+				sapi.StoreModConfig(ConfigServer, ConfigFile);
+				serverChannel.BroadcastPacket(update);
 			}
 			
-			serverChannel.BroadcastPacket(update);
 			Logger.Audit(message);
-			
 			return TextCommandResult.Success(message);
 		}
 
@@ -448,17 +365,17 @@ namespace Grindstones
 			{
 				if (itemSlot.Empty)
 				{
-					tool = "No tool specified or held!";
+					tool = "No tool specified nor held!";
 					return false;
 				}
 
-				if (itemSlot.Itemstack.Item.Tool is null)
+				if (itemSlot.Itemstack?.Item?.Tool is null)
 				{
-					tool = $"{itemSlot.Itemstack.Item.Code} is not a tool!";
+					tool = $"{itemSlot.Itemstack.GetName()} is not a tool!";
 					return false;
 				}
 				
-				tool = itemSlot.Itemstack.Item.Code;
+				type = itemSlot.Itemstack.Item.Code;
 			}
 			else if (sapi.World.GetItem(type).Tool is null)
 			{
@@ -467,6 +384,61 @@ namespace Grindstones
 			}
 
 			tool = type;
+			return true;
+		}
+
+		private bool validateMaterial (out string material, ItemSlot itemSlot, string type = null)
+		{
+			if (type is null)
+			{
+				if (itemSlot.Empty)
+				{
+					material = "No material specified nor tool held!";
+					return false;
+				}
+
+				material = itemSlot.Itemstack?.Item?.Variant["material"] ?? itemSlot?.Itemstack?.Item?.Variant["metal"] ?? null;
+				if (material is null)
+				{
+					material = "Tool does not have a specified material type!";
+					return false;
+				}
+			}
+			else // Maybe add materials from an ore dict someday
+			{
+				material = type;
+			}
+
+			material = material.ToLower();
+			return true;
+		}
+
+		private bool validateToolType (out string toolType, ItemSlot itemSlot, string type = null)
+		{
+			if (type is null)
+			{
+				if (itemSlot.Empty)
+				{
+					toolType = "No tool category specified nor tool held!";
+					return false;
+				}
+
+				if (itemSlot?.Itemstack.Item?.Tool is null)
+				{
+					toolType = $"{itemSlot.Itemstack.GetName()} is not a tool!";
+					return false;
+				}
+
+				type = itemSlot.Itemstack.Item.Tool.ToString();
+			}
+			// Requires that all tools are registered with the vanilla enum tool type
+			else if (!Enum.TryParse<EnumTool>(type, true, out _))
+			{
+				toolType = $"{type} is not a valid tool type!";
+				return false;
+			}
+
+			toolType = type.ToLower();
 			return true;
 		}
 		#endregion
@@ -547,17 +519,17 @@ namespace Grindstones
 	{
 		#region World Config Keys
 		
-		public static readonly IdentityKey Ratio = new IdentityKey("Ratio");
-		public static readonly IdentityKey Safe = new IdentityKey("Safe");
-		public static readonly IdentityKey Whitelist = new IdentityKey("Whitelist");
-		public static readonly IdentityKey Blacklist = new IdentityKey("Blacklist");
-		public static readonly IdentityKey DisallowedTools = new IdentityKey("DisallowedTools");
-		public static readonly IdentityKey AllowedMaterials = new IdentityKey("AllowedMaterials");
+		public static readonly IdentityKey Ratio = new("Ratio");
+		public static readonly IdentityKey Safe = new("Safe");
+		public static readonly IdentityKey Whitelist = new("Whitelist");
+		public static readonly IdentityKey Blacklist = new("Blacklist");
+		public static readonly IdentityKey DisallowedTools = new("DisallowedTools");
+		public static readonly IdentityKey AllowedMaterials = new("AllowedMaterials");
 		
 		#endregion
 		#region Network Keys
 
-		public static readonly IdentityKey NetworkChannel = new IdentityKey("NetworkChannel");
+		public static readonly IdentityKey NetworkChannel = new("NetworkChannel");
 
 		#endregion
 		
