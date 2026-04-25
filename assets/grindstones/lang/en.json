@@ -5,6 +5,44 @@
 	"Grindstone ({0})": "Grindstone ({0})",
 	"{0} Grinding Wheel with {1}": "{0} Grinding Wheel with {1}",
 
+	"Wheel: {0}": "Wheel: {0}",
+
+	// Words/phrases that should be translated on their own (might have some conjugation issues though)
 	"none": "none",
-	"Wheel: {0}": "Wheel: {0}"
+
+	"enabled": "enabled",
+	"disabled": "disabled",
+
+	"whitelist": "whitelist",
+	"blacklist": "blacklist",
+	"material whitelist": "material whitelist",
+	"tool blacklist": "tool blacklist",
+
+	// Command tips and return messages
+	"Change Grindstones mod config settings on the fly": "Change Grindstones mod config settings on the fly",
+	"Change the ratio of MaxLoss to Gain.": "Change the ratio of MaxLoss to Gain.",
+	"Change the state of the Safe Sharpening setting.": "Change the state of the Safe Sharpening setting.",
+	"Edit the current overriding whitelist.": "Edit the current overriding whitelist.",
+	"Edit the current overriding blacklist.": "Edit the current overriding blacklist.",
+	"Edit the currently repairable materials.": "Edit the currently repairable materials.",
+	"Edit the currently disallowed tool types.": "Edit the currently disallowed tool types.",
+
+	"Unknown action \"{0}\"!": "Unknown action \"{0}\"!",
+	"No tool specified nor held!": "No tool specified nor held!",
+	"{0} is not a tool!": "{0} is not a tool!",
+	"No material specified nor tool held!": "No material specified nor tool held!",
+	"{0} does not have a specified material type!": "{0} does not have a specified material type!",
+	"No tool category specified nor tool held!": "No tool category specified nor tool held!",
+	"{0} is not a vaild tool type!": "{0} is not a vaild tool type!",
+
+	"Current ratio: {0}": "Current ratio: {0}",
+	"{0} updated Grindstones repair ratio from {1} to {2}.": "{0} updated Grindstones repair ratio from {1} to {2}.",
+
+	"Safe sharpening is currently: {0}": "Safe sharpening is currently: {0}",
+	"{0} updated Grindstones repair safety from {1} to {2}.": "{0} updated Grindstones repair safety from {1} to {2}.",
+
+	"Current {0}: {1}": "Current {0}: {1}",
+	"{0} added {1} to the {2}.": "{0} added {1} to the {2}.",
+	"{0} removed {1} from the {2}.": "{0} removed {1} from the {2}.",
+	"{0} reset the {1} to default.": "{0} reset the {1} to default."
 }
