@@ -1,10 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
+using Vintagestory;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
+using Vintagestory.API.Datastructures;
 using Vintagestory.API.Server;
+using Vintagestory.API.Util;
 
 namespace Grindstones
 {
@@ -33,6 +37,8 @@ namespace Grindstones
 
 		private readonly GrindstonesConfigServer ConfigServer = ModGrindstones.ConfigServer;
 
+		private TagSet validRepairTypes = TagSet.Empty;
+
 		internal Commands(ICoreServerAPI sapi, IServerNetworkChannel serverChannel)
 		{
 			this.sapi = sapi;
@@ -41,6 +47,9 @@ namespace Grindstones
 
 		internal void RegisterServerCommands(ICoreServerAPI sapi)
 		{
+			TagRegistryError err = sapi.CollectibleTagRegistry.TryCreateTagSet(out validRepairTypes, ["tool", "weapon"]);
+			ModGrindstones.Logger.Warning("Tags had an error: \"{0}\"", err);
+
 			CreateServerCommands(sapi);
 		}
 
@@ -253,7 +262,7 @@ namespace Grindstones
 					return false;
 				}
 
-				if (itemSlot.Itemstack.Item?.Tool is null)
+				if (!(itemSlot.Itemstack.Item.Tags.Overlaps(validRepairTypes) || itemSlot.Itemstack.Item?.Tool is not null))
 				{
 					tool = Lang.GetMatching("{0} is not a tool!", itemSlot.Itemstack.GetName());
 					return false;

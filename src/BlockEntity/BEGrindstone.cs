@@ -24,6 +24,7 @@ namespace Grindstones
 		private ILoadedSound sharpeningSound;
 
 		private BlockEntityAnimationUtil AnimUtil => GetBehavior<BEBehaviorAnimatable>()?.animUtil;
+		private TagSet validRepairTypes = TagSet.Empty;
 
 		public BlockEntityGrindstone()
 		{
@@ -42,6 +43,8 @@ namespace Grindstones
 		public override void Initialize (ICoreAPI api)
 		{
 			base.Initialize(api);
+			TagRegistryError err = api.CollectibleTagRegistry.TryCreateTagSet(out validRepairTypes, ["tool", "weapon"]);
+			ModGrindstones.Logger.Warning("Tags had an error: \"{0}\"", err);
 
 			inventory.LateInitialize(InventoryClassName + "-" + Pos, api);
 
@@ -368,11 +371,11 @@ namespace Grindstones
 			return base.OnTesselation(mesher, tessThreadTesselator);
 		}
 
-		private static bool IsRepairable (Item item)
+		private bool IsRepairable (Item item)
 		{
 			// Ensure this is an item
 			// Ensure item is a tool
-			if (item?.Tool is null) return false;
+			if (!(item.Tags.Overlaps(validRepairTypes) || item?.Tool is not null)) return false;
 			
 			// Check if item is Whitelisted
 			if (ModGrindstones.ConfigServer.IsWhitelisted(item.Code)) return true;
