@@ -262,9 +262,6 @@ namespace Grindstones
 					return false;
 				}
 
-				ModGrindstones.Logger.Debug(itemSlot.Itemstack.Item.Tags.ToString() ?? "No item passed");
-				
-
 				if (!(itemSlot.Itemstack.Item.Tags.Overlaps(validRepairTypes) || itemSlot.Itemstack.Item?.Tool is not null))
 				{
 					tool = Lang.GetMatching("{0} is not a tool!", itemSlot.Itemstack.GetName());
