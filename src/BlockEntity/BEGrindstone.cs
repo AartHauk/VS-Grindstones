@@ -44,7 +44,7 @@ namespace Grindstones
 		{
 			base.Initialize(api);
 			TagRegistryError err = api.CollectibleTagRegistry.TryCreateTagSet(out validRepairTypes, ["tool", "weapon"]);
-			ModGrindstones.Logger.Warning("Tags had an error: \"{0}\"", err);
+			ModGrindstones.Logger.Warning("Tags had an error during [Grindstone Entity Initalization]: \"{0}\"", err);
 
 			inventory.LateInitialize(InventoryClassName + "-" + Pos, api);
 

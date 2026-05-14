@@ -48,7 +48,7 @@ namespace Grindstones
 		internal void RegisterServerCommands(ICoreServerAPI sapi)
 		{
 			TagRegistryError err = sapi.CollectibleTagRegistry.TryCreateTagSet(out validRepairTypes, ["tool", "weapon"]);
-			ModGrindstones.Logger.Warning("Tags had an error: \"{0}\"", err);
+			ModGrindstones.Logger.Warning("Tags had an error during [Command Registration]: \"{0}\"", err);
 
 			CreateServerCommands(sapi);
 		}
