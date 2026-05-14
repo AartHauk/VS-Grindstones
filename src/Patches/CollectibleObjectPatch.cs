@@ -13,7 +13,7 @@ namespace Grindstones
 	public class CollectibleObjectPatch
 	{
 		[HarmonyPostfix]
-		[HarmonyAfter(["XSkillsPatch", "xskillsgilded", "xskillsfork"])] // Explicitly tell patcher these need to happen first
+		[HarmonyAfter(["XSkillsPatch", "xskillsgilded", "xskillsfork", "itemrarity"])] // Explicitly tell patcher these need to happen first
 		[HarmonyPriority(Priority.Last)] // Fallback to last for all other situations
 		[HarmonyPatch(typeof(CollectibleObject), nameof(CollectibleObject.GetMaxDurability))]
 		public static void Postfix (ref int __result, ItemStack itemstack)
