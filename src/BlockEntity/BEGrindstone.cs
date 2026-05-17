@@ -373,6 +373,8 @@ namespace Grindstones
 
 		private bool IsRepairable (Item item)
 		{
+			// Does item exist
+			if (item is null) return false;
 			// Ensure this is an item
 			// Ensure item is a tool
 			if (!(item.Tags.Overlaps(validRepairTypes) || item?.Tool is not null)) return false;
